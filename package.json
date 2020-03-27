@@ -16,8 +16,5 @@
     "express": "^4.16.4",
     "socket.io": "^2.2.0"
   }
-  "bugs": {
-  "url": ""
-},
   "homepage": ""
 }
