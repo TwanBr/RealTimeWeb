@@ -27,7 +27,7 @@ $(document).ready( function() {
 		gameIsRunning = false;
 		enterBtn.disabled = true;
 
-        $.getJSON( "highscores.json", function( data ) {
+        $.getJSON( "JSON/highscores.json", function( data ) {
             console.log( 'the result:' , data);
             //$('#status').append('<br>'+JSON.stringify(data));
 
@@ -36,7 +36,7 @@ $(document).ready( function() {
             if (scoreObj.length>=1){
                 scoreValue = scoreObj[0].bestScore;
             }
-            
+
             if (state.food > scoreValue){
                 alert(`Congratulations you just surpassed your previous highscore!
 \n
