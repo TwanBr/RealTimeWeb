@@ -29,7 +29,7 @@ $(document).ready( function() {
 
         $.getJSON( "highscores.json", function( data ) {
             console.log( 'the result:' , data);
-            $('#status').append('<br>'+JSON.stringify(data));
+            //$('#status').append('<br>'+JSON.stringify(data));
 
             let scoreObj = data.filter( (element)=> element.username == playerName);
             let scoreValue = 0;
