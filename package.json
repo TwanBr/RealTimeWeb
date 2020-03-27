@@ -1,23 +1,15 @@
 {
-  "name": "WebApp",
+  "name": "test",
   "version": "1.0.0",
-  "description": "node app ",
+  "description": "",
   "main": "app.js",
-  "scripts": {
-    "start": "node app.js"
+  "dependencies": {
+    "node-static": "^0.7.11"
   },
-  "repository": {
-    "type": "git",
-    "url": ""
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.16.4",
-    "socket.io": "^2.2.0"
-  },
-  "bugs": {
-    "url": ""
-  },
-  "homepage": ""
+  "license": "ISC"
 }
