@@ -1,0 +1,30 @@
+
+// - when the page loads start this function
+// 		- create an object for the state of the game
+// 		- show the state to the "status" DIV
+//		- when user clicks on "enterBtn" button:
+//			- show the state to the "status" DIV
+//			- read user input (from the "userInput" input field):
+//				- if user input is "QUIT" -> quit the game and show the score
+//				- if "SEARCH" -> roll a dice: 3 times out of 6 -> "you found something"
+//									- roll the dice again: 
+//										- 1 time out of 6 -> found a roasted chicken, + random HP
+//										- 1 time out of 6 -> found coins, + random SCORE, + random XP
+//										- 1 time out of 6 -> found poisonous mushroom, - random Hp, +1 XP
+//				- if "KILL" -> roll a dice: 2 times out of 6 -> "you killed a monster",
+//																and - random HP, 
+//																+ random XP, 
+//																+ random SCORE 
+//				- otherwise -> "command not recognized"
+
+
+
+// ------------- GUI ----------------------------
+<body>
+	<div id="status">...</div>
+	What do you want to do? (search/kill/quit)
+
+	<input type="text" id="userInput"></input>
+	
+	<button type="button" id="enterBtn">ENTER</button>	
+</body>
