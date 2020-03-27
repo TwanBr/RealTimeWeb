@@ -2,9 +2,9 @@
   "name": "WebApp",
   "version": "1.0.0",
   "description": "node app ",
-  "main": "simpleGame_v3.html",
+  "main": "app.js",
   "scripts": {
-  "start": "simpleGame_v3.html"
+  "start": "node app.js"
 },
   "repository": {
   "type": "git",
