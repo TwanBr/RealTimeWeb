@@ -2,6 +2,7 @@ const http = require('http');
 const url = require('url');
 const path = require('path');
 const root = __dirname;
+var port = process.env.PORT || 3000
 
 // *** load data from local file  ***
 const fs = require('fs');
@@ -63,7 +64,7 @@ route.for("POST","/", function(request,response){
 		console.log('received: '+ JSON.stringify( store ) );	// debug
 
 		// add new todo item to the list...
-		myData.push( {username: $(playerName) ,
+		myData.push( {username: playerName ,
 					  HighScore: $(state.food)} );
 
 		// then save the list on the file...
@@ -96,5 +97,19 @@ function onRequest(request,response){
 	}
 }
 
-http.createServer( onRequest ).listen(3000);
-console.log("Server has started...");
+http.createServer(function(req, res) {
+    var url = './' + (req.url == '/' ? 'index.html' : req.url)
+    fs.readFile(url, function(err, html) {
+        if (err) {
+            var message404 = "There is no such page! <a href='/'>Back to home page</a>"
+            res.writeHead(404, {'Content-Type': 'text/html', 'Content-Length': message404.length})
+            res.write(message404)
+        } else {
+            res.writeHead(200, {'Content-Type': 'text/html', 'Content-Length': html.length})
+            res.write(html)
+        }
+        res.end()
+    })
+}).listen(port,() => {
+    console.log(`Server running at port `+port);
+});
