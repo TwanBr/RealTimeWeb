@@ -114,10 +114,10 @@ $(document).ready( function() {
 			type: "POST",
 			url: "https://sdu-task1-realtimeweb.herokuapp.com:3000/",
 			dataType: "json",
-			data: {
-								$(playerName) ,
-								$(state.food);
-								}
+			data: JSON.stringify({
+								username: $(playerName) ,
+								bestScore: $(state.food)
+							})
 
 		})/*.done(function ( data ) {
 			console.log( data );
