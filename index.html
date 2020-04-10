@@ -19,13 +19,14 @@ $(document).ready( function() {
 	let gameIsRunning = true;
 
 	// the display that will show what happens
-	$('#status').html( 'Initial status: ' + JSON.stringify(state) );
+	$('#status').html( 'Status: ' + JSON.stringify(state) );
 
 	function quit(){
 		$('#status').html( 'You logged out! ' +
 							'HighScore: ...' + state.food );
 		gameIsRunning = false;
 		enterBtn.disabled = true;
+		quitBtn.disabled = true;
 
         $.getJSON( "JSON/highscores.json", function( data ) {
             console.log( 'the result:' , data);
@@ -110,7 +111,9 @@ old = ${scoreValue} ; new = ${state.food}`
 		}
 		$('#status').html( text );
 	});
-
+	$('#quitBtn').click(quit());
+	return;
+	
 });
 </script>
 
@@ -137,7 +140,8 @@ old = ${scoreValue} ; new = ${state.food}`
 		<b>What do you want to do? (search/move/return home/quit)</b>
 		<br/>
 		<input type="text" id="userInput"></input>
-		<button type="button" id="enterBtn">ENTER</button>
+		<button type="button" id="enterBtn">ENTER</button><br />
+		<button type="button" id="quitBtn">QUIT</button>
 		<script>
 			var input = document.getElementById("userInput");
 			input.addEventListener("keyup", function(event) {
