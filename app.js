@@ -8,16 +8,25 @@ var port = process.env.PORT || 3000
 const fs = require('fs');
 let myData = null;
 
-fs.readFile('/JSON/highscores.json', function (err, data) {
-	myData = []; // if file does not exist
-		//                  -> first run
-		//                     create an empty array
-	if (err) {
-		return; //console.error(err);
-	} else {
-		myData = JSON.parse(data);
-	}
-});
+
+fs.writeFile('/JSON/highsscores.json', JSON.stringify(myData), function(err) {
+  if (err) {
+    return console.error(err);
+  }
+
+  fs.readFile('/JSON/highscores.json', function (err, data) {
+  	myData = []; // if file does not exist
+  		//                  -> first run
+  		//                     create an empty array
+  	if (err) {
+  		return; //console.error(err);
+  	} else {
+  		myData = JSON.parse(data);
+      console.log(myData);
+  	}
+  });
+
+})
 // *** ***
 
 
