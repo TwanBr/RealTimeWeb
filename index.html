@@ -39,10 +39,10 @@ $(document).ready( function() {
             }
 
             if (state.food > scoreValue){
-                alert(`Congratulations you just surpassed your previous highscore!
-\n
-old = ${scoreValue} ; new = ${state.food}`
-);
+            		alert(`Congratulations you just surpassed your previous highscore!
+									\n
+									old = ${scoreValue} ; new = ${state.food}`
+								);
             }
         })
 	}
@@ -140,7 +140,11 @@ old = ${scoreValue} ; new = ${state.food}`
 		<br/>
 		<input type="text" id="userInput"></input>
 		<button type="button" id="enterBtn">ENTER</button><br />
-		<button type="button" id="quitBtn">QUIT</button>
+
+		<form method="POST">
+		<input type="submit" value="QUIT" id="quitBtn"/>
+		</form>
+
 		<script>
 			var input = document.getElementById("userInput");
 			input.addEventListener("keyup", function(event) {
