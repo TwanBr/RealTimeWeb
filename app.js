@@ -43,8 +43,8 @@ let route = {
 
 
 // serving static files - begin
-route.for("GET","/jquery-3.3.1.min.js", function(request,response){
-	serverStatic(response,"resources/jquery-3.3.1.min.js");
+route.for("GET","resources/jquery-3.3.1.js", function(request,response){
+	serverStatic(response,"resources/jquery-3.3.1.js");
 });
 
 route.for("GET","/", function(request,response){
