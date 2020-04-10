@@ -64,7 +64,7 @@ route.for("POST","/", function(request,response){
 		console.log('received: '+ JSON.stringify( store ) );	// debug
 
 		// add new todo item to the list...
-		myData.push( {username: playerName ,
+		myData.push( {username: $(playerName) ,
 					  bestScore: $(state.food)} );
 
 		// then save the list on the file...
