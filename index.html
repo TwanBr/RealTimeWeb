@@ -138,7 +138,15 @@ old = ${scoreValue} ; new = ${state.food}`
 		<br/>
 		<input type="text" id="userInput"></input>
 		<button type="button" id="enterBtn">ENTER</button>
-
+		<script>
+			var input = document.getElementById("userInput");
+			input.addEventListener("keyup", function(event) {
+				if (event.keyCode === 13) {
+					event.preventDefault();
+					document.getElementById("enterBtn").click();
+  				}
+			});
+		</script>
 	</p>
 
 </body>
