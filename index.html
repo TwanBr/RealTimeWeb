@@ -52,10 +52,6 @@ old = ${scoreValue} ; new = ${state.food}`
 		let text = `Player ${playerName}: your status is now ${JSON.stringify(state)}`;
 
 		switch( $('#userInput').val().toUpperCase() ){
-			case 'QUIT':{
-				quit();
-				return;
-			} break;
 			case 'SEARCH':{
 				let dice = Math.floor(Math.random()*6)+1;
 				if (dice<=3){
@@ -133,14 +129,14 @@ old = ${scoreValue} ; new = ${state.food}`
 		<p><h2>Situation</h2>
         <div>Instructions - use these commands to play:
             <br>SEARCH, MOVE, RETURN HOME
-            <br>And QUIT to finish the game.
+            <br>And click QUIT to finish the game.
         </div>
 		<div id="status">...</div>
 		</p>
 
 		<hr/>
 
-		<b>What do you want to do? (search/move/return home/quit)</b>
+		<b>What do you want to do? (search/move/return home)</b>
 		<br/>
 		<input type="text" id="userInput"></input>
 		<button type="button" id="enterBtn">ENTER</button><br />
