@@ -111,9 +111,12 @@ old = ${scoreValue} ; new = ${state.food}`
 		}
 		$('#status').html( text );
 	});
-	$('#quitBtn').click(quit());
-	return;
-	
+
+	$('#quitBtn').click( ()=>{
+		quit();
+		return;
+	});
+
 });
 </script>
 
