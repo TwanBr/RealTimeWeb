@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
-  }
+  },
   "dependencies": {
     "node-static": "^0.7.11"
   },
