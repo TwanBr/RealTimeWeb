@@ -106,11 +106,34 @@ $(document).ready( function() {
 		$('#status').html( text );
 	});
 
-	$('#quitBtn').click( ()=>{
+	$('input:submit').on('click',function(evt){
+		evt.preventDefault();
+		console.log( 'submitting form with Ajax...' );
+
+		$.ajax({
+			type: "POST",
+			url: "https://sdu-task1-realtimeweb.herokuapp.com:3000/",
+			dataType: "json",
+			data: JSON.stringify({
+								playerName;
+								$(state.food);
+								})
+
+		})/*.done(function ( data ) {
+			console.log( data );
+
+			let elements = $();
+			for(let i=0; i<data.length;i++) {
+				elements = elements.add('<li>'+data[i].timeStamp + '|'+ data[i].item +'</li>');
+			}
+			$('#todolist').empty();
+			$('#todolist').append(elements);
+			$('#the_text').val('');
+		});*/
+
 		quit();
 		return;
 	});
-
 });
 </script>
 
@@ -136,7 +159,7 @@ $(document).ready( function() {
 
 		<b>What do you want to do? (search/move/return home)</b>
 		<br/>
-		<input type="text" id="userInput"></input>
+		<input type="text" id="userInput" />
 		<button type="button" id="enterBtn">ENTER</button><br />
 
 		<form method="POST">
