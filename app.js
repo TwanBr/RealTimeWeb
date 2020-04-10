@@ -65,7 +65,7 @@ route.for("POST","/", function(request,response){
 
 		// add new todo item to the list...
 		myData.push( {username: playerName ,
-					  HighScore: $(state.food)} );
+					  bestScore: $(state.food)} );
 
 		// then save the list on the file...
 		fs.writeFile('/JSON/highscores.json', JSON.stringify(myData) ,  function(err) {
