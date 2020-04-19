@@ -14,12 +14,18 @@ $(document).ready( function() {
     let playerName = prompt('Please player, enter you name:','Default');
 
 	// initial state of the game
-	let state = {fuel: 100, food: 0, planet: 'Earth'};
 	let maxF = 100;
 	let gameIsRunning = true;
-
-	// the display that will show what happens
-	$('#status').html( 'Status: ' + JSON.stringify(state) );
+    let state = {fuel: 100, food: 0 , planet: 'Earth'};
+    $.getJSON( "JSON/highscores.json", function( data ) {
+    let scoreObj = data.filter( (element)=> element.username == playerName);
+    let scoreValue = 0;
+        if (scoreObj.length>=1){
+            scoreValue = scoreObj[0].bestScore;
+            state.food=scoreValue;
+            }
+    $('#status').html( 'Status: ' + JSON.stringify(state) );
+    });
 
 	function quit(){
 		$('#status').html( 'You logged out! ' +
