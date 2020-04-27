@@ -7,7 +7,7 @@
 }
 </style>
 
-<script src="resources/jquery-3.3.1.js"></script>
+<script src="/resources/jquery-3.3.1.js"></script>
 <script>
 
 $(document).ready( function() {
@@ -17,7 +17,7 @@ $(document).ready( function() {
 	let maxF = 100;
 	let gameIsRunning = true;
     let state = {fuel: 100, food: 0 , planet: 'Earth'};
-    $.getJSON(__dirname + "JSON/highscores.json", function( data ) {
+    $.getJSON(__dirname + "/JSON/highscores.json", function( data ) {
     let scoreObj = data.filter( (element)=> element.username == playerName);
     let scoreValue = 0;
         if (scoreObj.length>=1){
@@ -34,7 +34,7 @@ $(document).ready( function() {
 		enterBtn.disabled = true;
 		quitBtn.disabled = true;
 
-        $.getJSON(__dirname + "JSON/highscores.json", function( data ) {
+        $.getJSON(__dirname + "/JSON/highscores.json", function( data ) {
             console.log( 'the result:' , data);
             //$('#status').append('<br>'+JSON.stringify(data));
 
@@ -52,7 +52,7 @@ $(document).ready( function() {
 
 				$.ajax({
 					type: "POST",
-					url: "https://sdu-task1-realtimeweb.herokuapp.com:3000/",
+					url: "https://sdu-task1-realtimeweb.herokuapp.com:3000",
 					dataType: "json",
 					data: JSON.stringify({
 										username: playerName ,
