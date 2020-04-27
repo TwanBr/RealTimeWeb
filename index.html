@@ -49,9 +49,8 @@ $(document).ready( function() {
 								);
             }
         })
-
+				console.log("hello1");
 				$.ajax({
-					console.log("hello?");
 					type: "POST",
 					url: "https://sdu-task1-realtimeweb.herokuapp.com:3000",
 					dataType: "json",
@@ -71,6 +70,7 @@ $(document).ready( function() {
 					$('#todolist').append(elements);
 					$('#the_text').val('');
 				});*/;
+				console.log("hello2");
 	}
 
 	//$('#enterBtn').on('click', function(){
