@@ -9,12 +9,12 @@ const fs = require('fs');
 let myData = null;
 
 
-fs.writeFile('/JSON/highsscores.json', JSON.stringify(myData), function(err) {
+fs.writeFile(__dirname + '/JSON/highsscores.json', JSON.stringify(myData), function(err) {
   if (err) {
     return console.error(err);
   }
 
-  fs.readFile('/JSON/highscores.json', function (err, data) {
+  fs.readFile(__dirname + '/JSON/highscores.json', function (err, data) {
   	myData = []; // if file does not exist
   		//                  -> first run
   		//                     create an empty array
@@ -77,7 +77,7 @@ route.for("POST","/", function(request,response){
 					  bestScore: $(state.food)} );
 
 		// then save the list on the file...
-		fs.writeFile('/JSON/highscores.json', JSON.stringify(myData) ,  function(err) {
+		fs.writeFile(__dirname + '/JSON/highscores.json', JSON.stringify(myData) ,  function(err) {
 			if (err) {
 				return console.error(err);
 			}
