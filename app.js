@@ -7,6 +7,7 @@ var port = process.env.PORT || 3000
 // *** load data from local file  ***
 const fs = require('fs');
 let myData = null;
+console.log("HELLO?!");
 
 
 /*fs.writeFile(__dirname + '/JSON/highsscores.json', JSON.stringify(myData), function(err) {
