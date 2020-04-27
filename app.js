@@ -9,7 +9,7 @@ const fs = require('fs');
 let myData = null;
 
 
-fs.writeFile(__dirname + '/JSON/highsscores.json', JSON.stringify(myData), function(err) {
+/*fs.writeFile(__dirname + '/JSON/highsscores.json', JSON.stringify(myData), function(err) {
   if (err) {
     return console.error(err);
   }
@@ -26,7 +26,7 @@ fs.writeFile(__dirname + '/JSON/highsscores.json', JSON.stringify(myData), funct
   	}
   });
 
-})
+})*/
 // *** ***
 
 
@@ -53,8 +53,8 @@ let route = {
 
 
 // serving static files - begin
-route.for("GET","resources/jquery-3.3.1.js", function(request,response){
-	serverStatic(response,"resources/jquery-3.3.1.js");
+route.for("GET","/resources/jquery-3.3.1.js", function(request,response){
+	serverStatic(response,"/resources/jquery-3.3.1.js");
 });
 
 route.for("GET","/", function(request,response){
@@ -73,8 +73,8 @@ route.for("POST","/", function(request,response){
 		console.log('received: '+ JSON.stringify( store ) );	// debug
 
 		// add new todo item to the list...
-		myData.push( {username: $(playerName) ,
-					  bestScore: $(state.food)} );
+		myData.push( {username: playerName ,
+					  bestScore: state.food} );
 
 		// then save the list on the file...
 		fs.writeFile(__dirname + '/JSON/highscores.json', JSON.stringify(myData) ,  function(err) {
