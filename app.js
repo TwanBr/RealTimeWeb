@@ -49,8 +49,8 @@ let route = {
 }
 
 // serving static files - begin
-route.for("GET","/resources/jquery-3.3.1.min.js", function(request,response){
-	serverStatic(response,"resources/jquery-3.3.1.min.js");
+route.for("GET","/resources/jquery-3.3.1.js", function(request,response){
+	serverStatic(response,"resources/jquery-3.3.1.js");
 	console.log("routes test1"); //Does not work?
 });
 
