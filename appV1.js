@@ -107,7 +107,7 @@ function onRequest(request,response){
 	}
 }
 
-http.createServer(function(req, res) {
+http.createServer(onRequest(req, res) {
     var url = './' + (req.url == '/' ? 'index.html' : req.url)
     fs.readFile(url, function(err, html) {
         if (err) {
