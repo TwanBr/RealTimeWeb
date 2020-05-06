@@ -73,8 +73,8 @@ route.for("POST","/", function(request,response){
 		console.log('received: '+ JSON.stringify( store ) );	// debug //Does not work?
 
 		// add new todo item to the list...
-		myData.push( {username: playerName ,
-					  bestScore: state.food} );
+		myData.push( {username: receivedObj.username ,
+					  bestScore: receivedObj.bestScore} );
 
 		// then save the list on the file...
 		fs.writeFile(__dirname + '/JSON/highscores.json', JSON.stringify(myData) ,  function(err) {
