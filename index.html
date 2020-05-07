@@ -8,6 +8,7 @@
 </style>
 
 <script type="text/javascript" src="/resources/jquery-3.3.1.js"></script>
+
 <script>
 
 $(document).ready( function() {
@@ -38,26 +39,8 @@ $(document).ready( function() {
 		gameIsRunning = false;
 		enterBtn.disabled = true;
 		quitBtn.disabled = true;
-        
-
-        $.ajax({
-				type: "POST",
-				url: "http://localhost:3000/",
-				dataType: "json",
-				data: JSON.stringify({username: playerName, bestScore: state.food})
-        })/*.done(function ( data ) {
-			console.log( data );
-			
-			let elements = $();
-			for(let i=0; i<data.length;i++) {
-				elements = elements.add('<li>'+data[i].username + ','+ data[i].bestScore +'</li>');
-			}
-			$('#status').empty();
-			$('#status').append(elements);
-			
-		});*/
-        
-        /*$.getJSON("JSON/highscores.json", function( data ) {
+        /*$.getJSON ( "/JSON/highscores", function( data ) { 
+            console.log(data);
             let scoreObj = data.filter( (element)=> element.username == playerName);
             let scoreValue = 0;
             if (scoreObj.length>=1){
@@ -72,11 +55,39 @@ $(document).ready( function() {
             }
         });*/
         
+
+        $.ajax({
+				type: "POST",
+				url: "http://localhost:3000/",
+				dataType: "json",
+				data: JSON.stringify({username: playerName, bestScore: state.food})
+        }).done(function ( data ) {
+            let scoreObj = data.filter( (element)=> element.username == playerName);
+            console.log(scoreObj);
+            let scoreValue =0;
+            if (scoreObj.length>=1){
+                scoreValue = scoreObj[0].bestScore;
+            }
+            console.log(scoreValue);
+            console.log (state.food);
+            if(state.food >= scoreValue){
+                console.log("high");
+                alert(`Congratulations you just surpassed your previous highscore! Your new highscore = ${state.food}`
+                    );
+            }
+            else {
+                console.log("low");
+                alert(`You failed to surpass your highscore= ${scoreValue}  \n Try better nexti time... ) `);
+            }
+			
+		});
+        
+    };
 	
         
        
         
-    };
+
     
 	//$('#enterBtn').on('click', function(){
 	$('#enterBtn').click( ()=>{
@@ -146,6 +157,7 @@ $(document).ready( function() {
 		return;
 	});
 });
+
 </script>
 
 <title>SpaceShip</title>
