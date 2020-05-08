@@ -1,1 +1,1 @@
-[{"planet": "Earth", "fuel":100, "food":100}, {"planet": "Jupiter", "fuel" : 100, "food" :3000}, {"planet" :"Venus", "fuel": 200, "food" : 300}]
+[{"planetName":"Earth","planetMinerals":1467},{"planetName":"Jupiter","planetMinerals":25},{"planetName":"Venus","planetMinerals":281}]

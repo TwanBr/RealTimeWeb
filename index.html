@@ -9,102 +9,67 @@
 
 <script type="text/javascript" src="/resources/jquery-3.3.1.js"></script>
 <script>
-
 $(document).ready( function() {
-    let playerName = prompt('Please player, enter you name:','Default');
+  let playerName = prompt('Please player, enter you name:','Default');
 
 	// initial state of the game
-	let maxF = 100;
+	let maxFuel = 100;
 	let gameIsRunning = true;
-    let state = {fuel: 100, food: 0 , planet: 'Earth'};
-    /*$.getJSON( "JSON/highscores.json", function( data ) {
-    let scoreObj = data.filter( (element)=> element.username == playerName);
-    let scoreValue = 0;
-        if (scoreObj.length>=1){
-            scoreValue = scoreObj[0].bestScore;
-            state.food=scoreValue;
-            }
-    $('#status').html( 'Status: ' + JSON.stringify(state) );
-    });*/
-    
-    $('#status').html( 'Status: ' + JSON.stringify(state) );
-
-	// the display that will show what happens
-	
+	let state = {fuel: 100, minerals: 0 , planet: 'Earth'};
+  $('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);
 
 	function quit(){
 		$('#status').html( 'You logged out! ' +
-							'Score: ...' + state.food );
+							'Score: ...' + state.minerals );
 		gameIsRunning = false;
 		enterBtn.disabled = true;
 		quitBtn.disabled = true;
-        
 
         $.ajax({
 				type: "POST",
-				url: "http://localhost:3000/",
+				url: "http://localhost:3000/quit",
 				dataType: "json",
-				data: JSON.stringify({username: playerName, bestScore: state.food})
-        })/*.done(function ( data ) {
-			console.log( data );
-			
-			let elements = $();
-			for(let i=0; i<data.length;i++) {
-				elements = elements.add('<li>'+data[i].username + ','+ data[i].bestScore +'</li>');
-			}
-			$('#status').empty();
-			$('#status').append(elements);
-			
-		});*/
-        
-        /*$.getJSON("JSON/highscores.json", function( data ) {
-            let scoreObj = data.filter( (element)=> element.username == playerName);
-            let scoreValue = 0;
-            if (scoreObj.length>=1){
-                scoreValue = scoreObj[0].bestScore;
-            }
-
-
-            if (state.food > scoreValue){
-            		alert(`Congratulations you just surpassed your previous highscore! \n old = ${scoreValue} ; new = ${state.food}`
-                    );
-
-            }
-        });*/
-        
-	
-        
-       
-        
+				data: JSON.stringify({username: playerName, bestScore: state.minerals})
+				})
     };
-    
-	//$('#enterBtn').on('click', function(){
+
+	function updatePlanetData(){
+			$.ajax({
+			type: "POST",
+			url: "http://localhost:3000/",
+			dataType: "json",
+			data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+			})
+	};
+
 	$('#enterBtn').click( ()=>{
-		let text = `Player ${playerName}: your status is now ${JSON.stringify(state)}`;
+		let text = `${playerName}, your status is: ${JSON.stringify(state)}`;
 
 		switch( $('#userInput').val().toUpperCase() ){
 			case 'SEARCH':{
 				let dice = Math.floor(Math.random()*6)+1;
-				if (dice<=3){
-					text += '<br/>you searched on ' + state.planet + ' and found something...';
-					dice = Math.floor(Math.random()*6)+1;
+				if (dice<=4){
+
+
+					/* dice = Math.floor(Math.random()*6)+1;
 					if (dice==1){
             text += '<br/>... fuel.'
-            if ((state.fuel + dice) < maxF){
+            if ((state.fuel + dice) < maxFuel){
 						state.fuel += Math.floor(Math.random()*6)+1;
             }
 						else {
-            	state.fuel = maxF;
+            	state.fuel = maxFuel;
             }
 					}
-					if ((dice==2) || (dice==3)) {
-						text += '<br/>... food!';
-						state.food += Math.floor(Math.random()*6)+1;
-						//state.xp += Math.floor(Math.random()*6)+1;
-					}
-				}
-				else {
-					text += '<br/>you found nothing on ' + state.planet + '.';
+					if ((dice==2) || (dice==3)) { */
+						//text += '<br/>... minerals!';
+						foundMinerals = Math.floor(Math.random()*6)+1;
+						text += '<br/>you searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
+						state.minerals += foundMinerals;
+						updatePlanetData();
+						//return;
+					} else {
+					text += '<br/>you found nothing on ' + state.planet + ' right now.';
 				}
 			} break;
       case 'MOVE':{
@@ -113,7 +78,7 @@ $(document).ready( function() {
     			if (state.fuel <= roll) {
         			state.planet = 'Earth';
           		text += '<br/>you ran out of fuel and moved back to Earth.';
-              state.fuel = maxF;
+              state.fuel = maxFuel;
         	}
 					else {
         			if (dice<=3){
@@ -129,7 +94,7 @@ $(document).ready( function() {
       } break;
 			case 'RETURN HOME':{
 					text += '<br/>you are home!';
-					state.fuel = maxF;
+					state.fuel = maxFuel;
 					state.planet ='Earth';
 			} break;
 			default: {
@@ -140,9 +105,9 @@ $(document).ready( function() {
 	});
 
 	$('input:submit').on('click',function(){
-		
+
 		quit();
-        
+
 		return;
 	});
 });
