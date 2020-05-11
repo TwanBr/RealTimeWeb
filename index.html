@@ -8,10 +8,11 @@
 </style>
 
 <script type="text/javascript" src="/resources/jquery-3.3.1.js"></script>
+<script>var sufficient = "<%= sufficient %>";</script>
 
 <script>
 $(document).ready( function() {
-  let playerName = prompt('Please player, enter you name:','Default');
+  let playerName = prompt('Please player, enter you name:','PlayerName');
 
 	// initial state of the game
 	let maxFuel = 100;
@@ -26,68 +27,64 @@ $(document).ready( function() {
 				quitBtn.disabled = true;
 
     		$.ajax({
-					type: "POST",
-					url: "http://localhost:3000/quit",
-					dataType: "json",
-					data: JSON.stringify({username: playerName, bestScore: state.minerals})
+						type: "POST",
+						url: "http://localhost:3000/quit",
+						dataType: "json",
+						data: JSON.stringify({username: playerName, bestScore: state.minerals})
 				}).done(function ( data ) {
-			 		 let scoreObj = data.filter( (element)=> element.username == playerName);
-			 		 console.log(scoreObj);
-			 		 let scoreValue =0;
-			 		 if (scoreObj.length>=1){
-			 				 scoreValue = scoreObj[0].bestScore;
-			 		 }
-			 		 console.log(scoreValue);
-			 		 console.log (state.food);
-			 		 if(state.food >= scoreValue){
-			 				 console.log("high");
-			 				 alert(`Congratulations you just surpassed your previous highscore! Your new highscore = ${state.food}`
-			 						 );
-			 		 }
-			 		 else {
-			 				 console.log("low");
-			 				 alert(`You failed to surpass your highscore= ${scoreValue}  \n Try better next time... ) `);
-			 		 }
-			 });
-  };
 
-	function updatePlanetData(){
-			$.ajax({
-			type: "POST",
-			url: "http://localhost:3000/",
-			dataType: "json",
-			data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
-			})
+						let scoreObj = data.filter( (element)=> element.username == playerName);
+			 			console.log(scoreObj);
+			 			let scoreValue =0;
+			 			if (scoreObj.length>=1){
+			 				scoreValue = scoreObj[0].bestScore;
+			 			}
+			 			console.log(scoreValue);
+			 			console.log (state.food);
+			 			if(state.food >= scoreValue){
+			 			 		console.log("high");
+			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.food}`);
+			 			}
+			 			else {
+			 			 		console.log("low");
+			 			 		alert(`You failed to surpass your highscore of ${scoreValue}. \n Better luck next time...`);
+			 			}
+				});
+  	};
+
+		function updatePlanetData(){
+				$.ajax({
+				type: "POST",
+				url: "http://localhost:3000/",
+				dataType: "json",
+				data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+		})
 	};
 
 	$('#enterBtn').click( ()=>{
-		let text = `${playerName}, your status is: ${JSON.stringify(state)}`;
+		let statetext = ``;
+		let text = "";
+
 
 		switch( $('#userInput').val().toUpperCase() ){
 			case 'SEARCH':{
 				let dice = Math.floor(Math.random()*6)+1;
 				if (dice<=4){
-
-
-					/* dice = Math.floor(Math.random()*6)+1;
-					if (dice==1){
-            text += '<br/>... fuel.'
-            if ((state.fuel + dice) < maxFuel){
-						state.fuel += Math.floor(Math.random()*6)+1;
-            }
-						else {
-            	state.fuel = maxFuel;
-            }
-					}
-					if ((dice==2) || (dice==3)) { */
-						//text += '<br/>... minerals!';
 						foundMinerals = Math.floor(Math.random()*6)+1;
-						text += '<br/>you searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
-						state.minerals += foundMinerals;
+						var sufficient = "";
 						updatePlanetData();
+						console.log(sufficient);
+
 						//return;
-					} else {
-					text += '<br/>you found nothing on ' + state.planet + ' right now.';
+						if (Boolean(sufficient)) {
+								text += '<br />you searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
+								state.minerals += foundMinerals;
+						} else {
+								text += '<br /> You thought you found something, but there are not enough minerals left on ' + state.planet;
+						}
+						//return;
+				} else {
+						text += '<br />You found nothing on ' + state.planet + '.';
 				}
 			} break;
       case 'MOVE':{
@@ -95,7 +92,7 @@ $(document).ready( function() {
         	let roll = Math.floor(Math.random()*6)+1; //Cost of travel
     			if (state.fuel <= roll) {
         			state.planet = 'Earth';
-          		text += '<br/>you ran out of fuel and moved back to Earth.';
+          		text += '<br />You ran out of fuel and moved back to Earth.';
               state.fuel = maxFuel;
         	}
 					else {
@@ -107,19 +104,20 @@ $(document).ready( function() {
           			state.planet = 'Venus';
                 state.fuel -= roll;
         			}
-              text += '<br/>you moved to ' + state.planet + '.';
+              text += '<br />You moved to ' + state.planet + '.';
         		}
       } break;
 			case 'RETURN HOME':{
-					text += '<br/>you are home!';
+					text += '<br />You are home!';
 					state.fuel = maxFuel;
 					state.planet ='Earth';
 			} break;
 			default: {
-				text += '<br/>...command not recognized...';
+				text += '<br />...This command is not recognised...';
 			}
 		}
-		$('#status').html( text );
+		statetext += `${playerName}, your status is: ${JSON.stringify(state)}`;
+		$('#status').html( statetext + text );
 	});
 
 	$('input:submit').on('click',function(){

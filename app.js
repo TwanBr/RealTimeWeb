@@ -76,8 +76,18 @@ route.for("POST","/", function(request,response){
         console.log(i);
         if (receivedObject.planetName==planetData[i].planetName){
             console.log("planet found");
-            planetData[i].planetMinerals-=receivedObject.foundMinerals;
-            console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+            if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
+                planetData[i].planetMinerals-=receivedObject.foundMinerals;
+                console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+                let sufficient = true;
+                console.log(sufficient + ", test");
+                console.log("Sufficient minerals <3");
+            } else {
+                let sufficient = false;
+                console.log(sufficient + ", test");
+                console.log("Insufficient minerals ;(");
+                console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
+            }
             i=planetData.length;
         } else{
             console.log("not on " + planetData[i].planetName);
