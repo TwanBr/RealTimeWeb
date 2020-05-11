@@ -40,13 +40,12 @@ $(document).ready( function() {
 			 				scoreValue = scoreObj[0].bestScore;
 			 			}
 			 			console.log(scoreValue);
-			 			console.log (state.food);
 			 			if(state.food >= scoreValue){
-			 			 		console.log("high");
+			 			 		console.log("higher");
 			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.food}`);
 			 			}
 			 			else {
-			 			 		console.log("low");
+			 			 		console.log("lower");
 			 			 		alert(`You failed to surpass your highscore of ${scoreValue}. \n Better luck next time...`);
 			 			}
 				});
@@ -58,7 +57,7 @@ $(document).ready( function() {
 				url: "http://localhost:3000/",
 				dataType: "json",
 				data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
-		})
+				})
 	};
 
 	$('#enterBtn').click( ()=>{
