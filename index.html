@@ -49,15 +49,29 @@ $(document).ready( function() {
 			 			}
 				});
   	};
-
-		function updatePlanetData(){
-				$.ajax({
-				type: "POST",
-				url: "http://localhost:3000/",
-				dataType: "json",
-				data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
-				})
+    
+    var p= new Boolean("false");
+    function updatePlanetData(){
+				        $.ajax({
+				        type: "POST",
+				        url: "http://localhost:3000/",
+				        dataType: "json",
+				        data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+				}).done(function (data){
+                    let planetObj = data.filter (( element)=> element.planetName==state.planet);
+                    console.log(planetObj[0].planetMinerals);
+                    console.log(foundMinerals);
+                    if (planetObj[0].planetMinerals > foundMinerals){
+                        p= true
+                    }
+                            else {
+                                p=false;
+                            }
+                            return p;
+                    
+                });
 	};
+
 
 	$('#enterBtn').click( ()=>{
 		let statetext = ``;
@@ -70,17 +84,17 @@ $(document).ready( function() {
 				if (dice<=4){
 						foundMinerals = Math.floor(Math.random()*6)+1;
 						//var sufficient = "";
-						updatePlanetData();
-
-						console.log("Just testing:" + sufficient);
-
-						//return;
-						if (sufficient==true) {
-								text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
+		              
+						updatePlanetData(); 
+                    console.log(p);
+                    if (p) {
+                        text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
 								state.minerals += foundMinerals;
-						} else {
-								text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
-						}
+                    }
+                    else {
+                        text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
+                    }
+				
 						//return;
 				} else {
 						text += '<br />You found nothing on ' + state.planet + '.';
