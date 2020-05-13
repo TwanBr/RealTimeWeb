@@ -127,7 +127,7 @@ route.for("POST","/quit", function(request,response){
         for (i=0; i< myData.length; i++){
             console.log(i);
             if (receivedObj.username==myData[i].username){
-                x= false;
+                x = false;
                 console.log("here");
                 if (receivedObj.bestScore>myData[i].bestScore){
                     console.log("high");
