@@ -8,7 +8,6 @@
 </style>
 
 <script type="text/javascript" src="/resources/jquery-3.3.1.js"></script>
-<script>var sufficient = "<%= sufficient %>";</script>
 
 <script>
 $(document).ready( function() {
@@ -70,16 +69,17 @@ $(document).ready( function() {
 				let dice = Math.floor(Math.random()*6)+1;
 				if (dice<=4){
 						foundMinerals = Math.floor(Math.random()*6)+1;
-						var sufficient = "";
+						//var sufficient = "";
 						updatePlanetData();
-						console.log(sufficient);
+
+						console.log("Just testing:" + sufficient);
 
 						//return;
-						if (Boolean(sufficient)) {
-								text += '<br />you searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
+						if (sufficient==true) {
+								text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
 								state.minerals += foundMinerals;
 						} else {
-								text += '<br /> You thought you found something, but there are not enough minerals left on ' + state.planet;
+								text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
 						}
 						//return;
 				} else {

@@ -94,6 +94,13 @@ route.for("POST","/", function(request,response){
         }
     };
 
+/*
+    response.on('end', function() {
+      let sufficient = sufficient;
+      console.log("enough of: " + sufficient);
+    });
+    */
+
     fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
       if (err) {
         return console.error(err);
