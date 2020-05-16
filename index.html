@@ -49,28 +49,25 @@ $(document).ready( function() {
 			 			}
 				});
   	};
-    
-    var p= new Boolean("false");
+
+    var p = new Boolean(false);
     function updatePlanetData(){
-				        $.ajax({
-				        type: "POST",
-				        url: "http://localhost:3000/",
-				        dataType: "json",
-				        data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+				 $.ajax({
+				 		type: "POST",
+				 		url: "http://localhost:3000/",
+				 		dataType: "json",
+				 		data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
 				}).done(function (data){
-                    let planetObj = data.filter (( element)=> element.planetName==state.planet);
-                    console.log(planetObj[0].planetMinerals);
-                    console.log(foundMinerals);
-                    if (planetObj[0].planetMinerals > foundMinerals){
-                        p= true
-                    }
-                            else {
-                                p=false;
-                            }
-                            return p;
-                    
-                });
-	};
+            let planetObj = data.filter (( element)=> element.planetName==state.planet);
+            console.log(planetObj[0].planetMinerals);
+            console.log(foundMinerals);
+            if (planetObj[0].planetMinerals >= foundMinerals){
+                p = true;
+            } else {
+                p = false;
+            } return p;
+        });
+		};
 
 
 	$('#enterBtn').click( ()=>{
@@ -84,8 +81,8 @@ $(document).ready( function() {
 				if (dice<=4){
 						foundMinerals = Math.floor(Math.random()*6)+1;
 						//var sufficient = "";
-		              
-						updatePlanetData(); 
+
+						updatePlanetData();
                     console.log(p);
                     if (p) {
                         text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
@@ -94,7 +91,7 @@ $(document).ready( function() {
                     else {
                         text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
                     }
-				
+
 						//return;
 				} else {
 						text += '<br />You found nothing on ' + state.planet + '.';
