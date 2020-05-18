@@ -13,10 +13,15 @@ app.set('port', port);
 app.use(express.static(__dirname + '/public'));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.set('views', __dirname);
+
 // *** load data from local file  ***
 const fs = require('fs');
 let myData = null;
 let planetData = null;
+let sufficient = null;
 
 fs.readFile(__dirname + "/JSON/planets.json", function (err, data) {
   planetData = [];
@@ -62,20 +67,18 @@ app.post("/update", function(request,response) {
 
   var i;
   for (i=0; i< planetData.length; i++){
-      console.log(i);
+      //console.log(i);
       if (receivedObject.planetName==planetData[i].planetName){
-          console.log("planet found");
+          //console.log("planet found");
           if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
-              planetData[i].planetMinerals-=receivedObject.foundMinerals;
-              console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+              console.log(`There were enough minerals left on `  + planetData[i].planetMinerals + `: ` + planetData[i].planetName);
               let sufficient = true;
-              console.log(sufficient + ", test");
-              console.log("Sufficient minerals <3");
+              //console.log("Sufficient minerals <3");
+              planetData[i].planetMinerals-=receivedObject.foundMinerals;
           } else {
+              console.log(`There are too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
               let sufficient = false;
-              console.log(sufficient + ", test");
-              console.log("Insufficient minerals ;(");
-              console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
+              //console.log("Insufficient minerals ;(");
           }
           i=planetData.length;
       } else{
@@ -84,16 +87,22 @@ app.post("/update", function(request,response) {
   };
 
   fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-    if (err) {
-      return console.error(err);
-    }
-    console.log("Planet minerals updated successfully!");
-  });
+      if (err) {
+        return console.error(err);
+      }
+      console.log("Planet minerals updated successfully!");
+    });
 
       response.setHeader("Content-Type", "text/json");
       response.end( JSON.stringify( planetData ) );
       console.log('sent: '+ JSON.stringify( planetData ) );	// debug
   });
+});
+app.get('/get', function(req, res){
+    console.log('GET sufficient received');
+    res.end (sufficient);
+    //res.render('index.html',{sufficient:sufficient});
+    //return(sufficient);
 });
 app.post("/quit", function(request,response) {
   let store = '';

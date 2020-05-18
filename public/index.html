@@ -15,6 +15,9 @@
         right: 0;
         background:lightgray;
       }
+      p {
+        left: 100px;
+      }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -35,8 +38,7 @@
     <script>
     $(document).ready( function() {
       let playerName = prompt('Please player, enter you name:','PlayerName');
-
-    	// initial state of the game
+      // initial state of the game
     	let maxFuel = 100;
     	let gameIsRunning = true;
     	let state = {fuel: 100, minerals: 0 , planet: 'Earth'};
@@ -56,24 +58,24 @@
     				}).done(function ( data ) {
 
     						let scoreObj = data.filter( (element)=> element.username == playerName);
-    			 			console.log(scoreObj);
+    			 			//console.log(scoreObj);
     			 			let scoreValue =0;
     			 			if (scoreObj.length>=1){
     			 				scoreValue = scoreObj[0].bestScore;
     			 			}
-    			 			console.log(scoreValue);
+    			 			console.log(`Your recorded highscore: ${scoreValue}`);
     			 			if(state.food >= scoreValue){
-    			 			 		console.log("higher");
+    			 			 		console.log("Current score was higher than your previous highscore!");
     			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.food}`);
     			 			}
     			 			else {
-    			 			 		console.log("lower");
+    			 			 		console.log("Current score was lower than your highscore");
     			 			 		alert(`You failed to surpass your highscore of ${scoreValue}. \n Better luck next time...`);
     			 			}
     				});
       	};
 
-        var p= new Boolean;
+        var p= new Boolean(true);
         function updatePlanetData(){
     				 $.ajax({
     				 		type: "POST",
@@ -82,8 +84,8 @@
     				 		data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
     				}).done(function (data){
                 let planetObj = data.filter (( element)=> element.planetName==state.planet);
-                console.log(planetObj[0].planetMinerals);
-                console.log(foundMinerals);
+                console.log("Number of minerals found: " + foundMinerals);
+                console.log("New minerals left: " + planetObj[0].planetMinerals);
                 if (planetObj[0].planetMinerals >= foundMinerals){
                     p = true;
                 } else {
@@ -91,31 +93,36 @@
                 } return p;
             });
     		};
-
+        function wait(ms){
+           var start = new Date().getTime();
+           var end = start;
+           while(end < start + ms) {
+             end = new Date().getTime();
+          }
+        };
 
     	$('#enterBtn').click( ()=>{
     		let statetext = ``;
     		let text = "";
 
-
     		switch( $('#userInput').val().toUpperCase() ){
     			case 'SEARCH':{
     				let dice = Math.floor(Math.random()*6)+1;
     				if (dice<=4){
-    						foundMinerals = Math.floor(Math.random()*6)+1;
-    						//var sufficient = "";
+                foundMinerals = Math.floor(Math.random()*6)+1;
+    				    updatePlanetData();
+                console.log("P value " + p);
+                
+                if (p==true) {
+                  text += `<br />You searched on ${state.planet} and found ${foundMinerals} minerals!`;
+                  state.minerals += foundMinerals;
+                } else {
+                  text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
+                }
+                  /*$.ajax({type: "GET", url: "/get"}).done(function (data){
+                    let sufficient = data.filter (( element)=> element.sufficient==sufficient);
+                  });*/
 
-    				updatePlanetData();
-                    console.log(p);
-                        if (p==true) {
-                            text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals!';
-    								state.minerals += foundMinerals;
-                        }
-                        else {
-                            text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
-                        }
-
-    						//return;
     				} else {
     						text += '<br />You found nothing on ' + state.planet + '.';
     				}
@@ -169,7 +176,7 @@
         <div class="left">
           <h1>SpaceShip</h1>
         	<p>
-
+            <img src="/img/cookies-in-space.jpg">
         		<p><h2>Situation</h2>
                 <div>Instructions - use these commands to play:
                     <br>SEARCH, MOVE, RETURN HOME
