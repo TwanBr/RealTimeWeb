@@ -77,7 +77,7 @@
         function updatePlanetData(){
     				 $.ajax({
     				 		type: "POST",
-    				 		url: "/",
+    				 		url: "/update",
     				 		dataType: "json",
     				 		data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
     				}).done(function (data){

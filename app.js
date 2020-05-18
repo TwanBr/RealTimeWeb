@@ -84,8 +84,96 @@ route.for("GET", __dirname + "/public/", function(request,response){
 */
 // serving static files - end
 
-route.for("POST", __dirname + "/", function(request,response){
+app.post("/update", function(request,response) {
   let saved = '';
+  request.on('data', function(data){
+      saved += data;
+  });
+  request.on('end', function(){
+  let receivedObject = JSON.parse(saved);
+  console.log('received: '+ JSON.stringify( saved ) );
+
+  var i;
+  for (i=0; i< planetData.length; i++){
+      console.log(i);
+      if (receivedObject.planetName==planetData[i].planetName){
+          console.log("planet found");
+          if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
+              planetData[i].planetMinerals-=receivedObject.foundMinerals;
+              console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+              let sufficient = true;
+              console.log(sufficient + ", test");
+              console.log("Sufficient minerals <3");
+          } else {
+              let sufficient = false;
+              console.log(sufficient + ", test");
+              console.log("Insufficient minerals ;(");
+              console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
+          }
+          i=planetData.length;
+      } else{
+          console.log("not on " + planetData[i].planetName);
+      }
+  };
+
+  fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
+    if (err) {
+      return console.error(err);
+    }
+    console.log("Planet minerals updated successfully!");
+  });
+
+      response.setHeader("Content-Type", "text/json");
+      response.end( JSON.stringify( planetData ) );
+      console.log('sent: '+ JSON.stringify( planetData ) );	// debug
+  });
+});
+app.post("/quit", function(request,response) {
+  let store = '';
+    request.on('data', function(data){
+        store += data;
+    });
+    request.on('end', function(){
+    let receivedObj = JSON.parse(store);
+    console.log('received: '+ JSON.stringify( store ) );	// debug
+        var i;
+        var x= new Boolean("true");
+        for (i=0; i< myData.length; i++){
+            console.log(i);
+            if (receivedObj.username==myData[i].username){
+                x = false;
+                console.log("here");
+                if (receivedObj.bestScore>myData[i].bestScore){
+                    console.log("high");
+                    myData[i].bestScore=receivedObj.bestScore
+
+                }
+                else{
+                    console.log("score too low");
+                }
+            }};
+        if (x){
+            console.log("not here");
+            myData.push( {username: receivedObj.username ,
+            bestScore: receivedObj.bestScore} );
+        }
+
+    // then save the score on the file...
+    fs.writeFile(__dirname + "/JSON/highscores.json", JSON.stringify(myData) ,  function(err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log("Data written successfully!");
+    });
+
+        response.setHeader("Content-Type", "text/json");
+        response.end( JSON.stringify( myData ) );
+        console.log('sent: '+ JSON.stringify( myData ) );	// debug
+    });
+});
+/*
+route.for("POST", __dirname + "/", function(request,response){
+    let saved = '';
     request.on('data', function(data){
         saved += data;
     });
@@ -121,6 +209,7 @@ route.for("POST", __dirname + "/", function(request,response){
 //    console.log("enough of: " + sufficient);
 //    });
 
+
     fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
       if (err) {
         return console.error(err);
@@ -133,7 +222,9 @@ route.for("POST", __dirname + "/", function(request,response){
         console.log('sent: '+ JSON.stringify( planetData ) );	// debug
     });
 });
+*/
 
+/*
 route.for("POST", "/quit", function(request,response){
 	let store = '';
     request.on('data', function(data){
@@ -177,6 +268,7 @@ route.for("POST", "/quit", function(request,response){
         console.log('sent: '+ JSON.stringify( myData ) );	// debug
     });
 });
+*/
 
 // ===========================================
 // =                  CHAT                   =
