@@ -1,36 +1,53 @@
-const http = require('http');
+const express = require('express');
+const app = express();
+const router = express.Router();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 const url = require('url');
 const path = require('path');
+const favicon = require('serve-favicon');
 const root = __dirname;
-var port = process.env.PORT || 3000
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+app.use(express.static(__dirname + '/public'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
+
+/*
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});*/
 
 // *** load data from local file  ***
 const fs = require('fs');
 let myData = null;
 let planetData = null;
 
-  fs.readFile(__dirname + "/JSON/planets.json", function (err, data) {
-    planetData = [];
-    if (err) {
-      return;
-    } else {
-      planetData = JSON.parse(data);
-      console.log(planetData.length);
-    }
-  });
+fs.readFile(__dirname + "/JSON/planets.json", function (err, data) {
+  planetData = [];
+  if (err) {
+    return;
+    console.error(err);
+  } else {
+    planetData = JSON.parse(data);
+    console.log(planetData.length + ' planets');
+  }
+});
 
-  fs.readFile(__dirname + "/JSON/highscores.json", function (err, data) {
-  	myData = []; // if file does not exist
-  		//                  -> first run
-  		//                     create an empty array
-  	if (err) {
-  		return; //console.error(err);
-  	} else {
-  		myData = JSON.parse(data);
-      console.log(myData.length); //This one works - gets printed in terminal
-  	}
-  });
+fs.readFile(__dirname + "/JSON/highscores.json", function (err, data) {
+  myData = []; // if file does not exist
+  	//                  -> first run
+  	//                     create an empty array
+  if (err) {
+  	return;
+    console.error(err);
+  } else {
+  	myData = JSON.parse(data);
+    console.log(myData.length + ' existing players');
+  }
+});
 
+/*
 const serverStatic = function(response,file){
 	let fileToServe = path.join(root,file);
 	let stream = fs.createReadStream(fileToServe);
@@ -42,6 +59,7 @@ const serverStatic = function(response,file){
 		response.end();
 	});
 };
+*/
 
 // ======================================
 
@@ -53,16 +71,20 @@ let route = {
 }
 
 // serving static files - begin
+/*
 route.for("GET","/resources/jquery-3.3.1.js", function(request,response){
 	serverStatic(response,"/resources/jquery-3.3.1.js");
+  console.log("success Jquery");
 });
 
-route.for("GET","/", function(request,response){
-	serverStatic(response,"index.html");
+route.for("GET", __dirname + "/public/", function(request,response){
+	serverStatic(response,"public/index.html");
+  console.log("success index");
 });
+*/
 // serving static files - end
 
-route.for("POST","/", function(request,response){
+route.for("POST", __dirname + "/", function(request,response){
   let saved = '';
     request.on('data', function(data){
         saved += data;
@@ -94,12 +116,10 @@ route.for("POST","/", function(request,response){
         }
     };
 
-/*
-    response.on('end', function() {
-      let sufficient = sufficient;
-      console.log("enough of: " + sufficient);
-    });
-    */
+//  response.on('end', function() {
+//    let sufficient = sufficient;
+//    console.log("enough of: " + sufficient);
+//    });
 
     fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
       if (err) {
@@ -114,7 +134,7 @@ route.for("POST","/", function(request,response){
     });
 });
 
-route.for("POST","/quit", function(request,response){
+route.for("POST", "/quit", function(request,response){
 	let store = '';
     request.on('data', function(data){
         store += data;
@@ -158,8 +178,24 @@ route.for("POST","/quit", function(request,response){
     });
 });
 
+// ===========================================
+// =                  CHAT                   =
+// ===========================================
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
+    console.log('message: ' + msg);
+  });
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
 // ======================================
 
+/*
 function onRequest(request,response){
 	let pathname = url.parse(request.url).pathname;
 	console.log("Request for "+request.method + pathname+" received.");
@@ -172,9 +208,24 @@ function onRequest(request,response){
 		response.end("404 not found"); // is like write+end
 	}
 }
+*/
 
-// ANVA -> you were not calling onRequest ever in your code ;)
-http.createServer(onRequest)
-	.listen(port,() => {
-    	console.log(`Server running at port `+port); //Works
-	});
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+http.listen(port, () => {
+  console.log('listening on *:3000');
+});
