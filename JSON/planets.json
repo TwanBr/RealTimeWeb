@@ -1,1 +1,1 @@
-[{"planetName":"Earth","planetMinerals":0},{"planetName":"Jupiter","planetMinerals":52},{"planetName":"Venus","planetMinerals":255}]
+[{"planetName":"Earth","planetMinerals":0,"flag":"YES"},{"planetName":"Jupiter","planetMinerals":59,"flag":"NO"},{"planetName":"Venus","planetMinerals":218,"flag":"NO"}]

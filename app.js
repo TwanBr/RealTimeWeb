@@ -7,21 +7,16 @@ const url = require('url');
 const path = require('path');
 const favicon = require('serve-favicon');
 const root = __dirname;
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+
 
 app.use(express.static(__dirname + '/public'));
 app.use(favicon(__dirname + '/public/favicon.ico'));
-
-app.engine('html', require('ejs').renderFile);
-app.set('view engine', 'html');
-app.set('views', __dirname);
 
 // *** load data from local file  ***
 const fs = require('fs');
 let myData = null;
 let planetData = null;
-let sufficient = null;
+let stateData= null;
 
 fs.readFile(__dirname + "/JSON/planets.json", function (err, data) {
   planetData = [];
@@ -47,6 +42,18 @@ fs.readFile(__dirname + "/JSON/highscores.json", function (err, data) {
   }
 });
 
+fs.readFile(__dirname + "/JSON/state.json", function (err, data){
+    stateData = [];
+    if (err) {
+        return;
+        console.error (err);
+    } else{
+        stateData= JSON.parse(data);
+        console.log (stateData.length + 'state players')
+    }
+});
+
+
 // ======================================
 
 let route = {
@@ -67,18 +74,20 @@ app.post("/update", function(request,response) {
 
   var i;
   for (i=0; i< planetData.length; i++){
-      //console.log(i);
+      console.log(i);
       if (receivedObject.planetName==planetData[i].planetName){
-          //console.log("planet found");
+          console.log("planet found");
           if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
-              console.log(`There were enough minerals left on `  + planetData[i].planetMinerals + `: ` + planetData[i].planetName);
-              let sufficient = true;
-              //console.log("Sufficient minerals <3");
               planetData[i].planetMinerals-=receivedObject.foundMinerals;
+              console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+              let sufficient = true;
+              console.log(sufficient + ", test");
+              console.log("Sufficient minerals <3");
           } else {
-              console.log(`There are too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
               let sufficient = false;
-              //console.log("Insufficient minerals ;(");
+              console.log(sufficient + ", test");
+              console.log("Insufficient minerals ;(");
+              console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
           }
           i=planetData.length;
       } else{
@@ -87,22 +96,16 @@ app.post("/update", function(request,response) {
   };
 
   fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log("Planet minerals updated successfully!");
-    });
+    if (err) {
+      return console.error(err);
+    }
+    console.log("Planet minerals updated successfully!");
+  });
 
       response.setHeader("Content-Type", "text/json");
       response.end( JSON.stringify( planetData ) );
       console.log('sent: '+ JSON.stringify( planetData ) );	// debug
   });
-});
-app.get('/get', function(req, res){
-    console.log('GET sufficient received');
-    res.end (sufficient);
-    //res.render('index.html',{sufficient:sufficient});
-    //return(sufficient);
 });
 app.post("/quit", function(request,response) {
   let store = '';
@@ -148,10 +151,68 @@ app.post("/quit", function(request,response) {
     });
 });
 
+app.post ("/save", function (req, res){
+    let save = '';
+    req.on ('data', function (data){
+        save += data;
+    });
+    req.on('end', function(){
+        let receivedStat= JSON.parse (save);
+        console.log('received: '+ JSON.stringify( save ) );
+        var i;
+        var x= new Boolean("true");
+        for (i=0; i< stateData.length; i++){
+            console.log(i);
+            if (receivedStat.username==stateData[i].username){
+                x = false;
+                console.log("here");
+                stateData[i].fuel=receivedStat.fuel;
+                stateData[i].minerals=receivedStat.minerals;
+                /*stateData[i].planet=receivedStat.planet;*/
+                stateData[i].flag=receivedStat.flag;
+
+                }};
+        
+        if (x){
+            console.log("not here");
+            stateData.push( {username: receivedStat.username ,
+            fuel: receivedStat.fuel, minerals: receivedStat.minerals, /*planet: receivedStat.planet,*/ flag: receivedStat.flag} );
+        }
+        
+        fs.writeFile(__dirname + "/JSON/state.json", JSON.stringify(stateData) ,  function(err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log("Data written successfully!");
+    });
+
+        res.setHeader("Content-Type", "text/json");
+        res.end( JSON.stringify( stateData ) );
+        console.log('sent: '+ JSON.stringify( stateData ) );
+        
+    })
+});
+
+app.post( "/start", function (req, res){
+    let start='';
+    req.on('data', function (data){
+        start+=data;
+        req.on('end', function(){
+            let receivedPlayer= JSON.parse (start);
+            console.log ('received: '+JSON.stringify (start));
+        });
+        res.setHeader("Content-Type", "text/json");
+        res.end (JSON.stringify (stateData));
+        console.log ('sent: '+ JSON.stringify (stateData));
+    })
+})
+
+
 // ===========================================
 // =                  CHAT                   =
 // ===========================================
 
+/*
 io.on('connection', (socket) => {
   console.log('a user connected');
   socket.on('chat message', (msg) => {
@@ -162,10 +223,45 @@ io.on('connection', (socket) => {
     console.log('user disconnected');
   });
 });
+*/
 
+io.on('connection', function(socket){
+    console.log('a user connected');
+   
+    socket.join("Earth");
+
+    //Send this event to everyone in the room.
+    //*** TRY TO DECOMMENT THIS *** 
+    io.to("Earth").emit('connectToRoom', "Earth");
+    socket.emit('connectToRoom', "Earth");
+
+    socket.on('message', function(message){
+      console.log(" received message... ");
+      let messageObj = JSON.parse(message);
+      if (messageObj.message=='exit_Earth'){
+         console.log( 'changing room ... ');
+         socket.leave("Earth");
+         socket.join("Venus");
+         socket.emit('connectToRoom', "Venus");
+      } else if (messageObj.message=='exit_Venus'){
+         console.log( 'changing room ... ');
+         socket.leave("Venus");
+         socket.join("Earth");
+         socket.emit('connectToRoom', "Earth");
+      } else {
+         console.log(" ... message re-sent to all in room");
+        io.to(messageObj.planet).send(JSON.stringify(messageObj));
+      }
+    });
+   
+   socket.on('disconnect', function() {
+        console.log('a user disconnected');
+    });
+    
+});
 // ======================================
 
-function normalizePort(val) {
+/*function normalizePort(val) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -183,4 +279,7 @@ function normalizePort(val) {
 
 http.listen(port, () => {
   console.log('listening on *:3000');
+});*/
+ http.listen(3000, ()=>{ 
+	console.log('Server started: listening on localhost:3000'); 
 });
