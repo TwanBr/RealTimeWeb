@@ -49,7 +49,6 @@ fs.readFile(__dirname + "/JSON/state.json", function (err, data){
         console.error (err);
     } else{
         stateData= JSON.parse(data);
-        console.log (stateData.length + 'state players')
     }
 });
 
@@ -205,7 +204,76 @@ app.post( "/start", function (req, res){
         res.end (JSON.stringify (stateData));
         console.log ('sent: '+ JSON.stringify (stateData));
     })
+});
+
+app.post("/planet", function (req, res){
+    let planet='';
+    req.on ('data', function(data){
+        planet+= data;
+        req.on ('end', function(){
+            let Rplanet=JSON.parse (planet);
+            
+        });
+         res.setHeader("Content-Type", "text/json");
+        res.end (JSON.stringify (planetData));
+        console.log ('sent: '+ JSON.stringify (planetData));
+    })
 })
+
+app.post ("/pick", function (req, res){
+    let pick='';
+    req.on ('data', function (data){
+        pick+=data;
+        req.on ('end', function (){
+            let Rpick=JSON.parse (pick);
+            var i;
+            for (i=0; i<planetData.length; i++){
+                if (Rpick.planetName==planetData[i].planetName){
+                    planetData[i].flag='NO';
+                }
+            };
+            fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log("Data written successfully!");
+        });
+            
+         res.setHeader("Content-Type", "text/json");
+        res.end (JSON.stringify (planetData));
+        console.log ('sent: '+ JSON.stringify (planetData));   
+    })
+});
+
+});
+
+app.post("/drop", function (req,res){
+    let drop='';
+    req.on ('data', function (data){
+        drop+=data;
+       
+        req.on ('end', function (){
+            let Rdrop=JSON.parse (drop);
+            var i;
+            for (i=0; i<planetData.length; i++){
+                if (Rdrop.planetName==planetData[i].planetName){
+                    planetData[i].flag='YES';
+                }
+            };
+            fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log("Data written successfully!");
+        });
+            
+         res.setHeader("Content-Type", "text/json");
+        res.end (JSON.stringify (planetData));
+        console.log ('sent: '+ JSON.stringify (planetData));   
+    });
+});
+
+});
 
 
 // ===========================================
@@ -253,12 +321,15 @@ io.on('connection', function(socket){
         io.to(messageObj.planet).send(JSON.stringify(messageObj));
       }
     });
+    
+
    
    socket.on('disconnect', function() {
         console.log('a user disconnected');
     });
     
 });
+
 // ======================================
 
 /*function normalizePort(val) {

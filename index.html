@@ -41,6 +41,8 @@
     	let maxFuel = 100;
     	let gameIsRunning = true;
         let state = {fuel: 100, minerals: 0 , planet: 'Earth', flag: 'NO'};
+        let planet= {planetName:"Earth", flag: "NO"};
+
         
         function start (){
             $.ajax({
@@ -49,8 +51,7 @@
             dataType: "json",
             data: JSON.stringify ({username: playerName})
         }).done(function(data){
-           let playerObj = data.filter( (element)=> element.username == playerName);
-            console.log(playerObj);     
+           let playerObj = data.filter( (element)=> element.username == playerName);    
             if (playerObj.length>=1){
                 state.fuel = playerObj[0].fuel;
                 state.minerals= playerObj[0].minerals;
@@ -61,8 +62,22 @@
         }); 
         };
         
-        start ();
+        function planetInfo (){
+            $.ajax ({
+                type:"POST",
+                url:"/planet",
+                dataType:"json",
+                data: JSON.stringify({planetName: state.planet})
+            }).done (function (data){
+                let planetObj= data.filter ((element)=> element.planetName == state.planet);
+                planet.planetName=planetObj[0].planetName;
+                planet.flag=planetObj[0].flag;
+                $('#planetinfo').html(`YOU ARE ON : ${JSON.stringify(planet)}`);
+            });
+        }
         
+        start ();
+        planetInfo();
         
         
       /*$('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);*/
@@ -114,7 +129,7 @@
     				 		data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
     				}).done(function (data){
                 let planetObj = data.filter (( element)=> element.planetName==state.planet);
-                console.log(planetObj);
+                console.log(planetObj[0].planetMinerals);
                 console.log(foundMinerals);
                 if (planetObj[0].planetMinerals >= foundMinerals && planetObj[0].flag=="YES"){
                     p = true;
@@ -126,19 +141,35 @@
                     p= false;
                     f=false;
                 }
+   
 ;
                 return (p , f); 
             });
     		};
+        
+        function Pick (){
+            $.ajax({
+                type: "POST",
+                url: "/pick",
+                dataType:"json",
+                data:JSON.stringify({planetName: planet.planetName, flag: planet.flag})
+            })
+        };
+        
+        function Drop (){
+            $.ajax({
+                type:"POST",
+                url: "/drop",
+                dataType: "json",
+                data: JSON.stringify({planetName: planet.planetName, flag:planet.flag})
+            });
+        };
 
 
     	$('#enterBtn').click( ()=>{
-             
-            
-    		let statetext = ``;
-    		let text = "";
-
-
+    		let statetext = `${playerName}, your status is: ${JSON.stringify(state)}`;
+    		let text = '';
+            planetInfo();
     		switch( $('#userInput').val().toUpperCase() ){
     			case 'SEARCH':{
     				let dice = Math.floor(Math.random()*6)+1;
@@ -164,6 +195,7 @@
     				} else {
     						text += '<br />You found nothing on ' + state.planet + '.';
     				}
+                    $('#status').html( statetext + text );
     			} break;
           case 'MOVE':{
             	let dice = Math.floor(Math.random()*6)+1;
@@ -194,12 +226,14 @@
       };
               socket.send(JSON.stringify(data));
             console.log(data);
+              $('#status').html( statetext + text );
               
           } break;
     			case 'RETURN HOME':{
     					text += '<br />You are home!';
     					state.fuel = maxFuel;
     					state.planet ='Earth';
+                    
                     var data = {
                     user:playerName,
                     planet: state.planet,
@@ -208,16 +242,60 @@
     			};
                     socket.send(JSON.stringify(data));
             console.log(data);
+                    $('#status').html( statetext + text );
                 } break;
+                case 'PICK UP FLAG': {
+                    if (planet.flag=='YES'){
+                        state.flag='YES';
+                        Pick();
+                        var data={
+                        user:playerName,
+                        planet: state.planet,
+                        message:'I picked up the flag',
+                        type: 'userMessage',
+                    };
+                    socket.send(JSON.stringify (data));
+                   text+= '<br />You have a flag';
+                    }
+                    
+
+                    else {
+                        text += '<br />There is no flag on '+ state.planet;
+                    }
+                    $('#status').html( statetext + text );
+
+                }break;
+                case 'DROP FLAG':{
+                    if (state.flag=='YES'){
+                        state.flag='NO';
+                        Drop ();
+                        var data={
+                            user: playerName,
+                            planet: state.planet,
+                            message: 'I dropped the flag on '+state.planet,
+                            type: 'userMessage',
+                        };
+                        socket.send (JSON.stringify (data));
+                        text+= '<br /> You dropped the flag, the minerals on '+state.planet +' are now multiplied by 2!';
+                    }
+                    else {
+                        text+='<br /> You dont have a flag.';
+                    }
+                     $('#status').html( statetext + text );
+                }break;    
+                    
     			default: {
     				text += '<br />...This command is not recognised...';
+                    $('#status').html( statetext + text );
     			}
-    		}
+    		
             
-    		statetext += `${playerName}, your status is: ${JSON.stringify(state)}`;
-    		$('#status').html( statetext + text );
+    		
+    		
+            
+        };
         });
-
+            
     	$('input:submit').on('click',function(){
 
     		quit();
@@ -257,10 +335,13 @@
 
         		<p><h2>Situation</h2>
                 <div>Instructions - use these commands to play:
-                    <br>SEARCH, MOVE, RETURN HOME
+                    <br>SEARCH, MOVE, RETURN HOME, PICK UP FLAG, DROP FLAG
                     <br>And click QUIT to finish the game.
                 </div>
+            
         		<div id="status">...</div>
+                <div id="planetinfo"></div>
+                
         		</p>
 
         		<hr/>
@@ -269,6 +350,7 @@
         		<br/>
         		<input type="text" id="userInput" />
         		<button type="button" id="enterBtn">ENTER</button><br />
+         
 
         		<form method="POST">
         		<input type="submit" value="QUIT AND SAVE" id="quitBtn"/>
