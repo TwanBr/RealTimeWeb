@@ -87,24 +87,22 @@ app.post("/update", function(request,response) {
 
   var i;
   for (i=0; i< planetData.length; i++){
-      console.log(i);
+      //console.log(i);
       if (receivedObject.planetName==planetData[i].planetName){
-          console.log("planet found");
+          //console.log("planet found");
           if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
               planetData[i].planetMinerals-=receivedObject.foundMinerals;
               console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
               let sufficient = true;
-              console.log(sufficient + ", test");
               console.log("Sufficient minerals <3");
           } else {
               let sufficient = false;
-              console.log(sufficient + ", test");
               console.log("Insufficient minerals ;(");
               console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
           }
           i=planetData.length;
       } else{
-          console.log("not on " + planetData[i].planetName);
+          //console.log("not on " + planetData[i].planetName);
       }
   };
 
@@ -112,7 +110,7 @@ app.post("/update", function(request,response) {
     if (err) {
       return console.error(err);
     }
-    console.log("Planet minerals updated successfully!");
+    //console.log("Planet minerals updated successfully!");
   });
 
       response.setHeader("Content-Type", "text/json");
@@ -204,7 +202,6 @@ app.post ("/save", function (req, res){
 
     })
 });
-
 app.post("/planet", function (req, res){
     let planet='';
     req.on ('data', function(data){
@@ -218,16 +215,15 @@ app.post("/planet", function (req, res){
         console.log ('sent: '+ JSON.stringify (planetData));
     })
 })
-
-app.post ("/pick", function (req, res){
-    let pick='';
+app.post ("/grab", function (req, res){
+    let grab='';
     req.on ('data', function (data){
-        pick+=data;
+        grab+=data;
         req.on ('end', function (){
-            let Rpick=JSON.parse (pick);
+            let Rgrab=JSON.parse (grab);
             var i;
             for (i=0; i<planetData.length; i++){
-                if (Rpick.planetName==planetData[i].planetName){
+                if (Rgrab.planetName==planetData[i].planetName){
                     planetData[i].flag='NO';
                 }
             };
@@ -245,17 +241,16 @@ app.post ("/pick", function (req, res){
 });
 
 });
-
-app.post("/drop", function (req,res){
-    let drop='';
+app.post("/place", function (req,res){
+    let place='';
     req.on ('data', function (data){
-        drop+=data;
+        place+=data;
 
         req.on ('end', function (){
-            let Rdrop=JSON.parse (drop);
+            let Rplace=JSON.parse (place);
             var i;
             for (i=0; i<planetData.length; i++){
-                if (Rdrop.planetName==planetData[i].planetName){
+                if (Rplace.planetName==planetData[i].planetName){
                     planetData[i].flag='YES';
                 }
             };
@@ -273,24 +268,41 @@ app.post("/drop", function (req,res){
 });
 
 });
+app.post("/cheat", function (request,response){
+  let saved = '';
+  request.on('data', function(data){
+      saved += data;
+  });
+  request.on('end', function(){
+  let receivedObject = JSON.parse(saved);
 
+      var i;
+      for (i=0; i< planetData.length; i++){
+          //console.log(i);
+          if (receivedObject.planetName==planetData[i].planetName){
+              //console.log("planet found");
+              planetData[i].planetMinerals+=receivedObject.foundMinerals;
+              i=planetData.length;
+          } else{
+              //console.log("not on " + planetData[i].planetName);
+          }
+      };
+
+  fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
+    if (err) {
+      return console.error(err);
+    }
+  });
+
+      response.setHeader("Content-Type", "text/json");
+      response.end( JSON.stringify( planetData ) );
+      console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
+  });
+});
 
 // ===========================================
 // =                  CHAT                   =
 // ===========================================
-
-/*
-io.on('connection', (socket) => {
-  console.log('a user connected');
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
-    console.log('message: ' + msg);
-  });
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
-*/
 
 io.on('connection', function(socket){
     console.log(`User connected`);
@@ -316,7 +328,7 @@ io.on('connection', function(socket){
          socket.emit('connectToRoom', "Earth");
       } else {
          io.to(messageObj.planet).send(JSON.stringify(messageObj));
-         console.log("   ... shared to the room");
+         console.log(`   ... shared to the room: ${messageObj.user}: ${messageObj.message}`);
       }
     });
 
@@ -328,25 +340,6 @@ io.on('connection', function(socket){
 
 // ======================================
 
-/*function normalizePort(val) {
-  var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-http.listen(port, () => {
-  console.log('listening on *:3000');
-});*/
  http.listen(3000, ()=>{
 	console.log('Server started: listening on localhost:3000');
 });

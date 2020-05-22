@@ -3,36 +3,28 @@
   <head>
     <title>SpaceShip</title>
     <style>
-      .left, .right {
-        height:100%; position:fixed; z-index:1;top:0;overflow-x:hidden;padding-top:5px;
-      }
-      .left {
-        width:70%;
-        left: 0;
-      }
-      .right {
-        width:30%;
-        right: 0;
-        background:lightgray;
-      }
-      p {
-        left: 100px;
-      }
-
+      .left, .right { height:100%; position:fixed; z-index:1;top:0;overflow-x:hidden;padding-top:5px; }
+      .left { width:70%; left: 10px; }
+      .right { width:30%; right: 0; background:lightgray; }
+      p { left: 100px; line-height: 1.6; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      /*form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }*/
+      .bottom { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      .lowplace { position: fixed; padding: 3px; bottom: 80px; }
       form input { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
       form button { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #allmessages { list-style-type: none; margin: 0; padding: 0; }
       #allmessages li { padding: 5px 10px; }
-      #allmessages li:nth-child(odd) { background: #eee; }
-      input message { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
-      input send { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #allmessages li:nth-child(odd) { background: rgb(232,232,232); }
+      #message { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
+      #send { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #userInput { height:8%; background: rgb(245,245,245); border: 0; padding: 10px; width: 250px; margin-right: 0.2%;}
+      #enterBtn { width: 100px; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #quitBtn { display: block; margin-left: auto; margin-right: auto; }
+      h1 { text-align: center; }
+      img { display: block; margin-left: auto; margin-right: auto; }
 
-      $status {
-        height:150px;
-      }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
@@ -40,11 +32,26 @@
 
     <script>
     $(document).ready( function() {
-      let playerName = prompt('Please player, enter you name:','Twan');
+      let playerName = prompt('Please player, enter you name:','Default');
       // Set initial state of the game
     	let maxFuel = 100;
     	let gameIsRunning = true;
     	let state = {fuel: 100, minerals: 0 , planet: 'Earth', flag:'NO'};
+      let planet= {planetName:"Earth", flag: "NO"};
+
+      function planetInfo (){ //NEW
+          $.ajax ({
+              type:"POST",
+              url:"/planet",
+              dataType:"json",
+              data: JSON.stringify({planetName: state.planet})
+          }).done (function (data){
+              let planetObj= data.filter ((element)=> element.planetName == state.planet);
+              planet.planetName=planetObj[0].planetName;
+              planet.flag=planetObj[0].flag;
+              $('#planetinfo').html(`<br />🏁 Does ${planet.planetName} have a flag? ${planet.flag}`);
+          });
+      };
 
       function start (){
           $.ajax({
@@ -58,14 +65,29 @@
           if (playerObj.length>=1){
               state.fuel = playerObj[0].fuel;
               state.minerals= playerObj[0].minerals;
-              /*state.planet=playerObj[0].planet;*/
+              //state.planet=playerObj[0].planet;
               state.flag= playerObj[0].flag;
           }
-          $('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);
+          planetInfo();
+          $('#status').html(`${playerName}, your status is:
+              <br />⛽ Fuel: ${state.fuel}
+              <br />⛏️ Minerals: ${state.minerals}
+              <br />🌍 Planet: ${state.planet}
+              <br />🏁 Flag: ${state.flag}
+              <br />
+              `);
       });
       };
 
       start ();
+
+      function wait(ms){
+         var start = new Date().getTime();
+         var end = start;
+         while(end < start + ms) {
+           end = new Date().getTime();
+         };
+      };
 
     	function quit(){
     				$('#status').html( 'You logged out! ' + `Score: <b>${state.minerals}</b>`);
@@ -87,9 +109,9 @@
     			 				scoreValue = scoreObj[0].bestScore;
     			 			}
     			 			console.log(`Your recorded highscore: ${scoreValue}`);
-    			 			if(state.food >= scoreValue){
+    			 			if(state.minerals >= scoreValue){
     			 			 		console.log("Current score was higher than your previous highscore!");
-    			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.food}`);
+    			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.minerals}`);
     			 			}
     			 			else {
     			 			 		console.log("Current score was lower than your highscore");
@@ -129,42 +151,50 @@
                 return (p, f);
             });
     		};
-        /* function wait(ms){
-           var start = new Date().getTime();
-           var end = start;
-           while(end < start + ms) {
-             end = new Date().getTime();
-          }
-        }; */
+
+        function grab(){
+            $.ajax({
+                type: "POST",
+                url: "/grab",
+                dataType:"json",
+                data:JSON.stringify({planetName: planet.planetName, flag: planet.flag})
+            })
+        };
+
+        function place(){
+            $.ajax({
+                type:"POST",
+                url: "/place",
+                dataType: "json",
+                data: JSON.stringify({planetName: planet.planetName, flag:planet.flag})
+            });
+        };
 
     	$('#enterBtn').click( ()=>{
     		let statetext = ``;
     		let text = "";
+        let planettext = ``;
 
     		switch( $('#userInput').val().toUpperCase() ){
     			case 'SEARCH':{
     				let dice = Math.floor(Math.random()*6)+1;
     				if (dice<=4){
                 foundMinerals = Math.floor(Math.random()*6)+1;
-                //var sufficient = "";
-
                 updatePlanetData();
                 console.log("P value " + p);
+
                 if (p==true && f==false) {
                     text += `<br />You searched on ${state.planet} and found ${foundMinerals} minerals!`;
                     state.minerals += foundMinerals;
                 } else if (p==true && f==true) {
-                    text += '<br /> You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals! Congrats, this planet has a flag on it, these minerals will be multiplied by 2!';
+                    text += '<br />You searched on ' + state.planet + ' and found ' + foundMinerals + ' minerals! Since this planet has a flag on it, you get twice as many!';
                     state.minerals += foundMinerals*2;
                 } else if (p==false) {
-                    text += '<br />You thought you found something, but there are not enough minerals left on ' + state.planet;
+                    text += `<br />You thought you found them, but there are not enough minerals left on ${state.planet}.`;
                 }
-                  /*$.ajax({type: "GET", url: "/get"}).done(function (data){
-                    let sufficient = data.filter (( element)=> element.sufficient==sufficient);
-                  });*/
 
     				} else {
-    						text += '<br />You found nothing on ' + state.planet + '.';
+    						text += `<br />You found nothing this time on ${state.planet}.`;
     				}
     			} break;
           case 'MOVE':{
@@ -177,24 +207,17 @@
                   state.minerals = Math.floor(state.minerals/2);
             	}
     					else {
-            			/* if (dice<=3){
-              			state.planet = 'Jupiter';
-                    state.fuel -= roll;
-            			}
-            			if (dice>3){
-              			state.planet = 'Venus';
-                    state.fuel -= roll;
-            			} */
                   state.fuel -= roll;
                   state.planet = 'Venus';
                   text += '<br />You successfully landed on ' + state.planet + '.';
               }
               var data = {
-                user:playerName,
-                planet: state.planet,
-                message: 'exit_Earth',
-                type:'userMessage'
+                  user:playerName,
+                  planet: state.planet,
+                  message: 'exit_Earth',
+                  type:'userMessage'
               };
+              planetInfo();
               socket.send(JSON.stringify(data));
               console.log(data);
           } break;
@@ -209,22 +232,82 @@
                 message: 'exit_Venus',
                 type:'userMessage'
               };
+              planetInfo();
               socket.send(JSON.stringify(data));
               console.log(data);
     			} break;
 
-          case 'CHEAT':{
-              text += '<br />Fuck the system, Earth has some resources again';
-              //TO DO -> Add jQuery post to update planets.json
-          }
+          case 'GRAB FLAG': {
+              if (planet.flag=='YES'){
+                  state.flag='YES';
+                  grab();
+                  planetInfo(); //NEW
+                  var data={
+                      user:playerName,
+                      planet: state.planet,
+                      message:'I grabed up the flag',
+                      type: 'userMessage',
+                  };
+                  socket.send(JSON.stringify (data));
+                  text+= '<br />You have a flag';
+              } else {
+                  text += '<br />There is no flag on '+ state.planet;
+              }
+            } break;
+            case 'PLACE FLAG':{
+                if (state.flag=='YES'){
+                    state.flag='NO';
+                    place();
+                    planetInfo(); //NEW
+                    var data={
+                      user: playerName,
+                      planet: state.planet,
+                      message: 'I placed the flag on '+state.planet,
+                      type: 'userMessage',
+                    };
+                    socket.send (JSON.stringify (data));
+                    text+= '<br /> You placed the flag, the minerals on '+state.planet +' are now multiplied by 2!';
+              } else {
+                    text+='<br /> You dont have a flag.';
+              }
+            } break;
 
-    			default: {
-    				text += '<br />~This command is not recognised~';
-    			}
+            case 'CHEAT':{
+                  foundMinerals = 20;
+                  text += `<br />Fuck the system, ${state.planet} has some resources again... and so do you: ${foundMinerals} free minerals`;
+
+                  //TO DO -> Add jQuery post to update planets.json
+                  $.ajax({
+                     type: "POST",
+                     url: "/cheat",
+                     dataType: "json",
+                     data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+                   }).done(function (data){
+                     state.minerals += foundMinerals;
+                   });
+                   var data={
+                     user: playerName,
+                     planet: state.planet,
+                     message: 'SORRY, I CHEATED :)',
+                     type: 'userMessage',
+                   };
+                   socket.send (JSON.stringify (data));
+             } break;
+
+    			  default: {
+    				      text += '<br />~This command is not recognised~';
+    			  }
     		}
-
-        statetext += `${playerName}, your status is: ${JSON.stringify(state)}`;
+        statetext += `${playerName}, your status is:
+            <br />⛽ Fuel: ${state.fuel}
+            <br />⛏️ Minerals: ${state.minerals}
+            <br />🌍 Planet: ${state.planet}
+            <br />🏁 Flag: ${state.flag}
+            <br />
+            `;
+        planettext += `<br />🏁 Does ${planet.planetName} have a flag? ${planet.flag}`;
     		$('#status').html( statetext + text );
+        $('#planetinfo').html( planettext );
     	});
 
     	$('input:submit').on('click',function(){
@@ -240,14 +323,14 @@
         type:'userMessage'
       };
       socket.send(JSON.stringify(data));
-      console.log("Message sent to server");
+      //console.log("Message sent to server");
       $('#message').val('');
       });
       let socket = io.connect('/');
 
       socket.on('message', (data)=>{
         var dataObj = JSON.parse(data);
-        console.log(dataObj);
+        console.log(`Message sent: ${dataObj.message}`);
         $('#allmessages').append(`<div class="${dataObj.type}">${dataObj.user}: ${dataObj.message}</li>`);
       });
 
@@ -264,75 +347,58 @@
             <img src="/img/cookies-in-space.jpg">
         		<p><h2>Situation</h2>
                 <div>Instructions - use these commands to play:
-                    <br>SEARCH, MOVE, RETURN HOME
+                    <br>SEARCH, MOVE, RETURN HOME, GRAB FLAG, PLACE FLAG
                     <br>And click QUIT to finish the game.
                     <br />
                 </div>
+                <br />
         		    <div id="status">...</div>
-        		</p>
+                <div class="lowplace">
+                  <div id="planetinfo"></div>
+                  <br />
+                  <hr />
+                  <br />
+                  <b>What do you want to do? (search/move/return home/grab flag/place flag)</b>
+                  <br />
+                  <input type="text" id="userInput" placeholder="Enter your command"/>
+                  <button type="button" id="enterBtn"><b>ENTER</b></button>
 
-        		<hr/>
-
-        		<b>What do you want to do? (search/move/return home)</b>
-        		<br/>
-        		<input type="text" id="userInput" />
-        		<button type="button" id="enterBtn">ENTER</button><br />
-
-        		<form method="POST">
-        		    <input type="submit" value="QUIT & SAVE" id="quitBtn"/>
-        		</form>
-
-        		<script>
-        			var input = document.getElementById("userInput");
-        			input.addEventListener("keyup", function(event) {
-        				if (event.keyCode === 13) {
-        					event.preventDefault();
-        					document.getElementById("enterBtn").click();
-          				}
-        			})
-        		</script>
+                  <script>
+              			var input = document.getElementById("userInput");
+              			input.addEventListener("keyup", function(event) {
+              				if (event.keyCode === 13) {
+              					event.preventDefault();
+              					document.getElementById("enterBtn").click();
+                				}
+              			})
+              		</script>
+                </div>
+              </p>
+            <div class="bottom">
+            		<form method="POST">
+            		    <input type="submit" value="QUIT & SAVE" id="quitBtn"/>
+            		</form>
+            </div>
         	</p>
         </div>
         <div class="right">
           <div id="Planet"></div>
           <div id="allmessages"></div>
-          <input id="message" type="text" placeholder="Enter your message here"></input>
-          <input id="send" type="button" value="Send"></input>
+          <div class="bottom">
+              <input id="message" type="text" placeholder="Enter your message here"></input>
+              <input id="send" type="button" value="Send"></input>
+          </div>
 
-          <!-- Old chat space
-          <div id="Planet"></div>
-          <ul id="allmessages"></ul>
-          <form action="">
-            <input id="message" type="text" placeholder="Enter your message here" autocomplete="off" />
-            <input id="send" type="button">Send</button>
-          </form>
-          -->
-
-          <!--
-          <ul id="allmessages"></ul>
-          <form action="">
-            <input id="message" autocomplete="off" /><button>Send</button>
-          </form>
-          -->
-
-          <!--
           <script>
-            $(function () {
-              var socket = io();
-              $('form').submit(function(a) {
-                a.preventDefault(); // prevents page reloading
-                socket.emit('chat message', $('#message').val());
-                $('#message').val('');
-                return false;
-              });
-              socket.on('chat message', function(msg){
-                var dataObj = JSON.parse(data);
-                console.log(dataObj);
-                $('all#messages').append($('<li>').text(msg));
-              });
-            });
+            var input = document.getElementById("message");
+            input.addEventListener("keyup", function(event) {
+              if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById("send").click();
+                }
+            })
           </script>
-          -->
+
         </div>
     </div>
   </body>
