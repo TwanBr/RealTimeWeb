@@ -16,7 +16,7 @@
         background:lightgray;
       }
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
+      * { margin: 0; padding: 10px; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
@@ -35,13 +35,13 @@
       <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
     $(document).ready( function() {
-      let playerName = prompt('Please player, enter you name:','PlayerName');
+      let playerName = prompt('Please player, enter you name:','Twan');
 
     	// initial state of the game
     	let maxFuel = 100;
     	let gameIsRunning = true;
         let state = {fuel: 100, minerals: 0 , planet: 'Earth', flag: 'NO'};
-        
+
         function start (){
             $.ajax({
             type:"POST",
@@ -50,21 +50,21 @@
             data: JSON.stringify ({username: playerName})
         }).done(function(data){
            let playerObj = data.filter( (element)=> element.username == playerName);
-            console.log(playerObj);     
+            console.log(playerObj);
             if (playerObj.length>=1){
                 state.fuel = playerObj[0].fuel;
                 state.minerals= playerObj[0].minerals;
                 /*state.planet=playerObj[0].planet;*/
                 state.flag= playerObj[0].flag;
             }
-             $('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);   
-        }); 
+             $('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);
+        });
         };
-        
+
         start ();
-        
-        
-        
+
+
+
       /*$('#status').html(`${playerName}, your status is: ${JSON.stringify(state)}`);*/
 
     	function quit(){
@@ -127,14 +127,14 @@
                     f=false;
                 }
 ;
-                return (p , f); 
+                return (p , f);
             });
     		};
 
 
     	$('#enterBtn').click( ()=>{
-             
-            
+
+
     		let statetext = ``;
     		let text = "";
 
@@ -194,7 +194,7 @@
       };
               socket.send(JSON.stringify(data));
             console.log(data);
-              
+
           } break;
     			case 'RETURN HOME':{
     					text += '<br />You are home!';
@@ -213,7 +213,7 @@
     				text += '<br />...This command is not recognised...';
     			}
     		}
-            
+
     		statetext += `${playerName}, your status is: ${JSON.stringify(state)}`;
     		$('#status').html( statetext + text );
         });
@@ -224,7 +224,7 @@
 
     		return;
     	});
-        
+
         $('#send').click(()=>{
       var data = {
           user: playerName,
@@ -235,7 +235,7 @@
       socket.send(JSON.stringify(data));
       console.log("send message to server");
       $('#message').val('');
-            
+
    });
     let socket = io.connect('/');
 
@@ -257,8 +257,9 @@
 
         		<p><h2>Situation</h2>
                 <div>Instructions - use these commands to play:
-                    <br>SEARCH, MOVE, RETURN HOME
-                    <br>And click QUIT to finish the game.
+                    <br />SEARCH, MOVE, RETURN HOME
+                    <br />And click QUIT to finish the game.
+                    <br />
                 </div>
         		<div id="status">...</div>
         		</p>
@@ -290,7 +291,7 @@
             <div id="messages"></div>
             <input id="message" type="text" placeholder="Enter your message here"></input>
             <input id="send" type="button" value="Send"></input>
-          
+
         </div>
     </div>
   </body>

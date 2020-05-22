@@ -49,7 +49,7 @@ fs.readFile(__dirname + "/JSON/state.json", function (err, data){
         console.error (err);
     } else{
         stateData= JSON.parse(data);
-        console.log (stateData.length + 'state players')
+        console.log (stateData.length + ' state players')
     }
 });
 
@@ -63,6 +63,19 @@ let route = {
 	}
 }
 
+app.post("/start", function (req, res){
+    let start='';
+    req.on('data', function (data){
+        start+=data;
+        req.on('end', function(){
+            let receivedPlayer= JSON.parse (start);
+            console.log ('received: '+JSON.stringify (start));
+        });
+        res.setHeader("Content-Type", "text/json");
+        res.end (JSON.stringify (stateData));
+        console.log ('sent: '+ JSON.stringify (stateData));
+    })
+});
 app.post("/update", function(request,response) {
   let saved = '';
   request.on('data', function(data){
@@ -104,7 +117,7 @@ app.post("/update", function(request,response) {
 
       response.setHeader("Content-Type", "text/json");
       response.end( JSON.stringify( planetData ) );
-      console.log('sent: '+ JSON.stringify( planetData ) );	// debug
+      console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
   });
 });
 app.post("/quit", function(request,response) {
@@ -147,10 +160,9 @@ app.post("/quit", function(request,response) {
 
         response.setHeader("Content-Type", "text/json");
         response.end( JSON.stringify( myData ) );
-        console.log('sent: '+ JSON.stringify( myData ) );	// debug
+        console.log('sent QUIT: '+ JSON.stringify( myData ) );	// debug
     });
 });
-
 app.post ("/save", function (req, res){
     let save = '';
     req.on ('data', function (data){
@@ -172,13 +184,13 @@ app.post ("/save", function (req, res){
                 stateData[i].flag=receivedStat.flag;
 
                 }};
-        
+
         if (x){
             console.log("not here");
             stateData.push( {username: receivedStat.username ,
             fuel: receivedStat.fuel, minerals: receivedStat.minerals, /*planet: receivedStat.planet,*/ flag: receivedStat.flag} );
         }
-        
+
         fs.writeFile(__dirname + "/JSON/state.json", JSON.stringify(stateData) ,  function(err) {
       if (err) {
         return console.error(err);
@@ -188,24 +200,10 @@ app.post ("/save", function (req, res){
 
         res.setHeader("Content-Type", "text/json");
         res.end( JSON.stringify( stateData ) );
-        console.log('sent: '+ JSON.stringify( stateData ) );
-        
+        console.log('sent SAVE: '+ JSON.stringify( stateData ) );
+
     })
 });
-
-app.post( "/start", function (req, res){
-    let start='';
-    req.on('data', function (data){
-        start+=data;
-        req.on('end', function(){
-            let receivedPlayer= JSON.parse (start);
-            console.log ('received: '+JSON.stringify (start));
-        });
-        res.setHeader("Content-Type", "text/json");
-        res.end (JSON.stringify (stateData));
-        console.log ('sent: '+ JSON.stringify (stateData));
-    })
-})
 
 
 // ===========================================
@@ -226,38 +224,37 @@ io.on('connection', (socket) => {
 */
 
 io.on('connection', function(socket){
-    console.log('a user connected');
-   
+    console.log(`User connected`);
     socket.join("Earth");
 
     //Send this event to everyone in the room.
-    //*** TRY TO DECOMMENT THIS *** 
+    //*** TRY TO DECOMMENT THIS ***
     io.to("Earth").emit('connectToRoom', "Earth");
     socket.emit('connectToRoom', "Earth");
 
     socket.on('message', function(message){
-      console.log(" received message... ");
+      console.log("Received message... ");
       let messageObj = JSON.parse(message);
       if (messageObj.message=='exit_Earth'){
-         console.log( 'changing room ... ');
+         console.log('changing room ... ');
          socket.leave("Earth");
          socket.join("Venus");
          socket.emit('connectToRoom', "Venus");
       } else if (messageObj.message=='exit_Venus'){
-         console.log( 'changing room ... ');
+         console.log('changing room ... ');
          socket.leave("Venus");
          socket.join("Earth");
          socket.emit('connectToRoom', "Earth");
       } else {
-         console.log(" ... message re-sent to all in room");
-        io.to(messageObj.planet).send(JSON.stringify(messageObj));
+         io.to(messageObj.planet).send(JSON.stringify(messageObj));
+         console.log("   ... shared to the room");
       }
     });
-   
+
    socket.on('disconnect', function() {
-        console.log('a user disconnected');
+        console.log(`User disconnected`);
     });
-    
+
 });
 // ======================================
 
@@ -280,6 +277,6 @@ io.on('connection', function(socket){
 http.listen(port, () => {
   console.log('listening on *:3000');
 });*/
- http.listen(3000, ()=>{ 
-	console.log('Server started: listening on localhost:3000'); 
+ http.listen(3000, ()=>{
+	console.log('Server started: listening on localhost:3000');
 });
