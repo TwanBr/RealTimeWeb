@@ -21,7 +21,7 @@
       #send { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #userInput { height:8%; background: rgb(245,245,245); border: 0; padding: 10px; width: 250px; margin-right: 0.2%;}
       #enterBtn { width: 100px; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #quitBtn { display: block; margin-left: auto; margin-right: auto; }
+      #quitBtn { display: block; margin-left: auto; margin-right: auto; background: rgb(220,20,60); }
       h1 { text-align: center; }
       img { display: block; margin-left: auto; margin-right: auto; }
 
@@ -39,7 +39,7 @@
     	let state = {fuel: 100, minerals: 0 , planet: 'Earth', flag:'NO'};
       let planet= {planetName:"Earth", flag: "NO"};
 
-      function planetInfo (){ //NEW
+      function planetInfo (){
           $.ajax ({
               type:"POST",
               url:"/planet",
