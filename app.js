@@ -8,51 +8,49 @@ const path = require('path');
 const favicon = require('serve-favicon');
 const root = __dirname;
 
-
 app.use(express.static(__dirname + '/public'));
 app.use(favicon(__dirname + '/public/favicon.ico'));
+
+//============================
+const { MongoClient } = require('mongodb');
+
+// Connection URL
+const uri = 'mongodb+srv://spaceDBuser:Pjufp3M8SBiGYZXP@cluster1-wjvck.azure.mongodb.net/spaceDB?retryWrites=true&w=majority';
+const client = new MongoClient(uri, { useNewUrlParser: true });
+const dbName = "spaceDB";
+//============================
 
 // *** load data from local file  ***
 const fs = require('fs');
 let myData = null;
 let planetData = null;
-let stateData= null;
+let stateData = null;
 
-fs.readFile(__dirname + "/JSON/planets.json", function (err, data) {
-  planetData = [];
-  if (err) {
-    return;
-    console.error(err);
-  } else {
-    planetData = JSON.parse(data);
-    console.log(planetData.length + ' planets');
-  }
-});
+async function run() {
+    try {
+        await client.connect();
+        console.log ("Connected to mongoDB server");
+        const db = client.db(dbName);
 
-fs.readFile(__dirname + "/JSON/highscores.json", function (err, data) {
-  myData = []; // if file does not exist
-  	//                  -> first run
-  	//                     create an empty array
-  if (err) {
-  	return;
-    console.error(err);
-  } else {
-  	myData = JSON.parse(data);
-    console.log(myData.length + ' existing players');
-  }
-});
+        //Use the collection "state"
+        const col1 = db.collection("state");
+        const col2 = db.collection("planets");
+        const col3 = db.collection("highscores");
 
-fs.readFile(__dirname + "/JSON/state.json", function (err, data){
-    stateData = [];
-    if (err) {
-        return;
-        console.error (err);
-    } else{
-        stateData= JSON.parse(data);
-        console.log (stateData.length + ' state players')
+        stateData = await col1.find({}).toArray();
+        planetData = await col2.find({}).toArray();
+        myData = await col3.find({}).toArray();
+
+    } finally {
+        console.log (stateData.length + ' player states found');
+        console.log(planetData.length + ' planets found');
+        console.log(myData.length + ' highscores in database');
+
+        await client.close();
     }
-});
+}
 
+run();
 
 // ======================================
 
@@ -76,6 +74,7 @@ app.post("/start", function (req, res){
         console.log ('sent: '+ JSON.stringify (stateData));
     })
 });
+
 app.post("/update", function(request,response) {
   let saved = '';
   request.on('data', function(data){

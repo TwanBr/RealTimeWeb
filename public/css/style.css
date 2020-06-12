@@ -1,0 +1,21 @@
+.left, .right { height:100%; position:fixed; z-index:1;top:0;overflow-x:hidden;padding-top:5px; }
+.left { width:70%; left: 10px; }
+.right { width:30%; right: 0; background:lightgray; }
+p { left: 100px; line-height: 1.6; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font: 13px Helvetica, Arial; }
+/*form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }*/
+.bottom { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+.lowplace { position: fixed; padding: 3px; bottom: 80px; }
+form input { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
+form button { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+#allmessages { list-style-type: none; margin: 0; padding: 0; }
+#allmessages li { padding: 5px 10px; }
+#allmessages li:nth-child(odd) { background: rgb(232,232,232); }
+#message { height:10%; border: 0; padding: 10px; width: 25%; margin-right: 0.2%;}
+#send { width: 4.8%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+#userInput { height:8%; background: rgb(245,245,245); border: 0; padding: 10px; width: 250px; margin-right: 0.2%;}
+#enterBtn { width: 100px; background: rgb(130, 224, 255); border: none; padding: 10px; }
+#quitBtn { display: block; margin-left: auto; margin-right: auto; background: rgb(220,20,60); }
+h1 { text-align: center; }
+img { display: block; margin-left: auto; margin-right: auto; }

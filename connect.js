@@ -36,6 +36,7 @@ async function run() {
 }
 
 run().catch(console.dir);
+console.log(state);
 
 
 /*
