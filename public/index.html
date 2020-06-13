@@ -10,54 +10,14 @@
     <script>
     $(document).ready( function() {
       let playerName = prompt('Please player, enter you name:','Twan'); //Change 'Twan' to 'Default' after testing
+
       // Set initial state of the game
     	let maxFuel = 100;
     	let gameIsRunning = true;
     	let state = {fuel: 100, minerals: 0 , planet: 'Earth', flag:'NO'};
-      let planet= {planetName:"Earth", flag: "NO"};
+      let planet = {planetName: 'Earth', flag: 'NO'};
 
-      function planetInfo (){
-          $.ajax ({
-              type:"POST",
-              url:"/planet",
-              dataType:"json",
-              data: JSON.stringify({planetName: state.planet})
-          }).done (function (data){
-              let planetObj= data.filter ((element)=> element.planetName == state.planet);
-              planet.planetName=planetObj[0].planetName;
-              planet.flag=planetObj[0].flag;
-              $('#planetinfo').html(`<br />🏁 Does ${planet.planetName} have a flag? ${planet.flag}`);
-          });
-      };
-
-      function start (){
-          $.ajax({
-          type:"POST",
-          url: "/start",
-          dataType: "json",
-          data: JSON.stringify ({username: playerName})
-      }).done(function(data){
-          let playerObj = data.filter( (element)=> element.username == playerName);
-          //console.log(playerObj);
-          if (playerObj.length>=1){
-              state.fuel = playerObj[0].fuel;
-              state.minerals= playerObj[0].minerals;
-              //state.planet=playerObj[0].planet;
-              state.flag= playerObj[0].flag;
-          }
-          planetInfo();
-          $('#status').html(`${playerName}, your status is:
-              <br />⛽ Fuel: ${state.fuel}
-              <br />⛏️ Minerals: ${state.minerals}
-              <br />🌍 Planet: ${state.planet}
-              <br />🏁 Flag: ${state.flag}
-              <br />
-          `);
-      });
-      };
-
-      start ();
-
+      //Introduces delay of X ms
       function wait(ms){
          var start = new Date().getTime();
          var end = start;
@@ -66,68 +26,110 @@
          };
       };
 
+      function planetInfo (){
+          $.ajax ({
+              type:"POST",
+              url:"/planet",
+              dataType:"json",
+              data: JSON.stringify({planetName: state.planet})
+          }).done (function(data){
+              let planetObj = data.filter ((element) => element.planetName == state.planet);
+              planet.planetName = planetObj[0].planetName;
+              planet.flag = planetObj[0].flag;
+              $('#planetinfo').html(`<br />🏁 Does ${planet.planetName} have a flag? ${planet.flag}`);
+          });
+      };
+
+      function start (){
+          $.ajax({
+              type:"POST",
+              url: "/start",
+              dataType: "json",
+              data: JSON.stringify ({username: playerName})
+          }).done(function(data){
+              let playerObj = data.filter( (element) => element.username == playerName);
+              if (playerObj.length >= 1){
+                  state.fuel = playerObj[0].fuel;
+                  state.minerals = playerObj[0].minerals;
+                  state.planet = playerObj[0].planet;
+                  state.flag = playerObj[0].flag;
+          }
+          $('#status').html(`${playerName}, your status is:
+              <br />⛽ Fuel: ${state.fuel}
+              <br />⛏️ Minerals: ${state.minerals}
+              <br />🌍 Planet: ${state.planet}
+              <br />🏁 Flag: ${state.flag}
+              <br />
+          `);
+          planetInfo();
+          });
+      };
+
+      start ();
+
+      var p = new Boolean(true);
+      var f = new Boolean(false);
+      function updatePlanetData(){
+           $.ajax({
+              type: "POST",
+              url: "/update",
+              dataType: "json",
+              data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+          }).done(function (data){
+              let planetObj = data.filter (( element)=> element.planetName==state.planet);
+              console.log("Number of minerals found: " + foundMinerals);
+              console.log("New minerals left: " + planetObj[0].planetMinerals);
+              if (planetObj[0].planetMinerals >= foundMinerals && planetObj[0].flag=="YES"){
+                  p = true;
+                  f= true;
+              } else if (planetObj[0].planetMinerals >= foundMinerals && planetObj[0].flag=="NO"){
+                  p = true;
+                  f= false;
+              } else {
+                  p= false;
+                  f=false;
+              };
+              return (p, f);
+          });
+      };
+
     	function quit(){
-    				$('#status').html( 'You logged out! ' + `Score: <b>${state.minerals}</b>`);
+    				$('#status').html( `You logged out! Score: <b>${state.minerals}</b>`);
     				gameIsRunning = false;
     				enterBtn.disabled = true;
     				quitBtn.disabled = true;
+
+            $.ajax({
+                type: "POST",
+                url:"/save",
+                dataType: "json",
+                data: JSON.stringify({username: playerName, fuel: state.fuel, minerals: state.minerals, planet: state.planet, flag: state.flag})
+            });
+
+            wait(200);
 
         		$.ajax({
     						type: "POST",
     						url: "/quit",
     						dataType: "json",
     						data: JSON.stringify({username: playerName, bestScore: state.minerals})
-    				}).done(function ( data ) {
-
-    						let scoreObj = data.filter( (element)=> element.username == playerName);
-    			 			//console.log(scoreObj);
-    			 			let scoreValue =0;
-    			 			if (scoreObj.length>=1){
+    				}).done(function(data){
+    						let scoreObj = data.filter( (element) => element.username == playerName);
+    			 			let scoreValue = 0;
+    			 			if (scoreObj.length >= 1){
     			 				scoreValue = scoreObj[0].bestScore;
     			 			}
     			 			console.log(`Your recorded highscore: ${scoreValue}`);
     			 			if(state.minerals >= scoreValue){
-    			 			 		console.log("Current score was higher than your previous highscore!");
+    			 			 		console.log(`Current score was higher than your previous highscore!`);
     			 			 		alert(`Congratulations you just surpassed your previous highscore! Your new highscore is ${state.minerals}`);
     			 			}
     			 			else {
-    			 			 		console.log("Current score was lower than your highscore");
+    			 			 		console.log(`Current score was lower than your highscore`);
     			 			 		alert(`You failed to surpass your highscore of ${scoreValue}. \n Better luck next time...`);
     			 			}
     				});
-            $.ajax({
-                type: "POST",
-                url:"/save",
-                dataType: "json",
-                data: JSON.stringify({username: playerName, fuel: state.fuel, minerals: state.minerals, /*planet: state.planet,*/ flag: state.flag})
-            });
       	};
-
-        var p = new Boolean(true);
-        var f = new Boolean(false);
-        function updatePlanetData(){
-    				 $.ajax({
-    				 		type: "POST",
-    				 		url: "/update",
-    				 		dataType: "json",
-    				 		data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
-    				}).done(function (data){
-                let planetObj = data.filter (( element)=> element.planetName==state.planet);
-                console.log("Number of minerals found: " + foundMinerals);
-                console.log("New minerals left: " + planetObj[0].planetMinerals);
-                if (planetObj[0].planetMinerals >= foundMinerals && planetObj[0].flag=="YES"){
-                    p = true;
-                    f= true;
-                } else if (planetObj[0].planetMinerals >= foundMinerals && planetObj[0].flag=="NO"){
-                    p = true;
-                    f= false;
-                } else {
-                    p= false;
-                    f=false;
-                };
-                return (p, f);
-            });
-    		};
 
         function grab(){
             $.ajax({
@@ -218,11 +220,11 @@
               if (planet.flag=='YES'){
                   state.flag='YES';
                   grab();
-                  planetInfo(); //NEW
+                  planetInfo();
                   var data={
-                      user:playerName,
+                      user: ' System',
                       planet: state.planet,
-                      message:'I grabed up the flag',
+                      message:`${playerName} grabbed the flag`,
                       type: 'userMessage',
                   };
                   socket.send(JSON.stringify (data));
@@ -237,9 +239,9 @@
                     place();
                     planetInfo(); //NEW
                     var data={
-                      user: playerName,
+                      user: ' System',
                       planet: state.planet,
-                      message: 'I placed the flag on '+state.planet,
+                      message: 'The flag was placed on '+state.planet,
                       type: 'userMessage',
                     };
                     socket.send (JSON.stringify (data));
@@ -252,15 +254,23 @@
             case 'CHEAT':{
                   foundMinerals = 20;
                   text += `<br />Fuck the system, ${state.planet} has some resources again... and so do you: ${foundMinerals} free minerals`;
-
                   //TO DO -> Add jQuery post to update planets.json
                   $.ajax({
                      type: "POST",
                      url: "/cheat",
                      dataType: "json",
-                     data: JSON.stringify({planetName: state.planet, foundMinerals: foundMinerals})
+                     data: JSON.stringify({username: state.username, planetName: state.planet, foundMinerals: foundMinerals})
                    }).done(function (data){
                      state.minerals += foundMinerals;
+                     //wait(1000);
+                     statetext = `${playerName}, your status is:
+                         <br />⛽ Fuel: ${state.fuel}
+                         <br />⛏️ Minerals: ${state.minerals}
+                         <br />🌍 Planet: ${state.planet}
+                         <br />🏁 Flag: ${state.flag}
+                         <br />
+                         `;
+                         $('#status').html( statetext + text );
                    });
                    var data={
                      user: playerName,
@@ -300,14 +310,14 @@
         type:'userMessage'
       };
       socket.send(JSON.stringify(data));
-      //console.log("Message sent to server");
+
       $('#message').val('');
       });
       let socket = io.connect('/');
 
       socket.on('message', (data)=>{
         var dataObj = JSON.parse(data);
-        console.log(`Message sent: ${dataObj.message}`);
+        console.log(`Message sent by ${dataObj.user}: ${dataObj.message}`);
         $('#allmessages').append(`<div class="${dataObj.type}">${dataObj.user}: ${dataObj.message}</li>`);
       });
 

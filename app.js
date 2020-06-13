@@ -3,22 +3,20 @@ const app = express();
 const router = express.Router();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-const url = require('url');
+const url = require('url'); //Not used?
 const path = require('path');
 const favicon = require('serve-favicon');
 const root = __dirname;
 
+//Load public files
 app.use(express.static(__dirname + '/public'));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
-//============================
 const { MongoClient } = require('mongodb');
-
 // Connection URL
 const uri = 'mongodb+srv://spaceDBuser:Pjufp3M8SBiGYZXP@cluster1-wjvck.azure.mongodb.net/spaceDB?retryWrites=true&w=majority';
-const client = new MongoClient(uri, { useNewUrlParser: true });
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const dbName = "spaceDB";
-//============================
 
 // *** load data from local file  ***
 const fs = require('fs');
@@ -26,13 +24,12 @@ let myData = null;
 let planetData = null;
 let stateData = null;
 
-async function run() {
+async function load() {
     try {
         await client.connect();
         console.log ("Connected to mongoDB server");
         const db = client.db(dbName);
 
-        //Use the collection "state"
         const col1 = db.collection("state");
         const col2 = db.collection("planets");
         const col3 = db.collection("highscores");
@@ -40,19 +37,20 @@ async function run() {
         stateData = await col1.find({}).toArray();
         planetData = await col2.find({}).toArray();
         myData = await col3.find({}).toArray();
-
+    } catch (err) {
+        print(err.stack);
     } finally {
-        console.log (stateData.length + ' player states found');
-        console.log(planetData.length + ' planets found');
-        console.log(myData.length + ' highscores in database');
-
-        await client.close();
+        //console.log(stateData.length + ' player states found'); // debug
+        //console.log(planetData.length + ' planets found'); // debug
+        //console.log(myData.length + ' highscores in database'); // debug
     }
 }
 
-run();
+load().catch(console.dir);
 
-// ======================================
+// ===========================================
+// =                  ROUTES                 =
+// ===========================================
 
 let route = {
 	routes : {},
@@ -62,19 +60,18 @@ let route = {
 }
 
 app.post("/start", function (req, res){
-    let start='';
+    let start = '';
     req.on('data', function (data){
-        start+=data;
+        start += data;
         req.on('end', function(){
-            let receivedPlayer= JSON.parse (start);
-            console.log ('received: '+JSON.stringify (start));
+            let receivedPlayer = JSON.parse(start);
+            console.log ('Received: ' + JSON.stringify(start)); // debug
         });
         res.setHeader("Content-Type", "text/json");
         res.end (JSON.stringify (stateData));
-        console.log ('sent: '+ JSON.stringify (stateData));
+        console.log ('Sent from server: ' + JSON.stringify(stateData)); // debug
     })
-});
-
+}); //mongoDB done
 app.post("/update", function(request,response) {
   let saved = '';
   request.on('data', function(data){
@@ -82,41 +79,44 @@ app.post("/update", function(request,response) {
   });
   request.on('end', function(){
   let receivedObject = JSON.parse(saved);
-  console.log('received: '+ JSON.stringify( saved ) );
+  //console.log('Received: ' + JSON.stringify(saved)); // debug
 
-  var i;
-  for (i=0; i< planetData.length; i++){
-      //console.log(i);
+  async function updatePlanet() {
+      try {
+          const db = client.db(dbName);
+          const col2 = db.collection("planets");
+
+          await col2.findOneAndUpdate(
+            { planetName : receivedObject.planetName },
+            { $inc : { planetMinerals : -receivedObject.foundMinerals } },
+            { new : true },
+          );
+      } catch (err) {
+          console.log(err.stack);
+      } finally {
+      }
+  }
+  for (var i = 0; i < planetData.length; i++){
+      //Find correct planet
       if (receivedObject.planetName==planetData[i].planetName){
-          //console.log("planet found");
+          //If planet is found
           if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
-              planetData[i].planetMinerals-=receivedObject.foundMinerals;
-              console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
-              let sufficient = true;
+              planetData[i].planetMinerals -= receivedObject.foundMinerals;
               console.log("Sufficient minerals <3");
+              console.log(planetData[i].planetMinerals + ` minerals left on ` + planetData[i].planetName);
+              updatePlanet().catch(console.dir);
           } else {
-              let sufficient = false;
               console.log("Insufficient minerals ;(");
               console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
           }
           i=planetData.length;
-      } else{
-          //console.log("not on " + planetData[i].planetName);
-      }
+      } else {} //Continue loop if wrong planet
   };
-
-  fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-    if (err) {
-      return console.error(err);
-    }
-    //console.log("Planet minerals updated successfully!");
+  response.setHeader("Content-Type", "text/json");
+  response.end( JSON.stringify( planetData ) );
+  //console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
   });
-
-      response.setHeader("Content-Type", "text/json");
-      response.end( JSON.stringify( planetData ) );
-      console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
-  });
-});
+}); //mongoDB done for SEARCH, MOVE and RETURN HOME have to be checked
 app.post("/quit", function(request,response) {
   let store = '';
     request.on('data', function(data){
@@ -124,42 +124,46 @@ app.post("/quit", function(request,response) {
     });
     request.on('end', function(){
     let receivedObj = JSON.parse(store);
-    console.log('received: '+ JSON.stringify( store ) );	// debug
+    //console.log('received: '+ JSON.stringify( store ) );	// debug
         var i;
         var x= new Boolean("true");
         for (i=0; i< myData.length; i++){
-            console.log(i);
             if (receivedObj.username==myData[i].username){
                 x = false;
-                console.log("here");
                 if (receivedObj.bestScore>myData[i].bestScore){
-                    console.log("high");
                     myData[i].bestScore=receivedObj.bestScore
-
+                    console.log("Previous highscore was surpassed");
                 }
                 else{
-                    console.log("score too low");
+                    console.log("Previous highscore was not surpassed");
                 }
             }};
         if (x){
-            console.log("not here");
             myData.push( {username: receivedObj.username ,
             bestScore: receivedObj.bestScore} );
         }
 
-    // then save the score on the file...
-    fs.writeFile(__dirname + "/JSON/highscores.json", JSON.stringify(myData) ,  function(err) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log("Data written successfully!");
-    });
+    async function updateHighScore() {
+        try {
+            const db = client.db(dbName);
+            const col3 = db.collection("highscores");
 
-        response.setHeader("Content-Type", "text/json");
-        response.end( JSON.stringify( myData ) );
-        console.log('sent QUIT: '+ JSON.stringify( myData ) );	// debug
-    });
-});
+            await col3.updateOne(
+              { username : receivedObj.username },
+              { $set : {username : receivedObj.username, bestScore : receivedObj.bestScore }},
+              { new : true, upsert : true }
+            );
+        } catch (err) {
+            console.log(err.stack);
+        } finally {
+            await client.close();
+        }
+    }
+    updateHighScore().catch(console.dir);
+    response.setHeader("Content-Type", "text/json");
+    response.end( JSON.stringify( myData ) );
+    //console.log('sent QUIT: '+ JSON.stringify( myData ) );	// debug
+    });}); //mongoDB done, this one also breaks connection
 app.post ("/save", function (req, res){
     let save = '';
     req.on ('data', function (data){
@@ -167,40 +171,51 @@ app.post ("/save", function (req, res){
     });
     req.on('end', function(){
         let receivedStat= JSON.parse (save);
-        console.log('received: '+ JSON.stringify( save ) );
+        //console.log('received: '+ JSON.stringify( save ) ); // debug
         var i;
         var x= new Boolean("true");
         for (i=0; i< stateData.length; i++){
-            console.log(i);
             if (receivedStat.username==stateData[i].username){
                 x = false;
-                console.log("here");
                 stateData[i].fuel=receivedStat.fuel;
                 stateData[i].minerals=receivedStat.minerals;
-                /*stateData[i].planet=receivedStat.planet;*/
+                stateData[i].planet=receivedStat.planet;
                 stateData[i].flag=receivedStat.flag;
-
-                }};
+            }
+        };
 
         if (x){
-            console.log("not here");
             stateData.push( {username: receivedStat.username ,
-            fuel: receivedStat.fuel, minerals: receivedStat.minerals, /*planet: receivedStat.planet,*/ flag: receivedStat.flag} );
+            fuel: receivedStat.fuel, minerals: receivedStat.minerals, planet: receivedStat.planet, flag: receivedStat.flag} );
         }
 
-        fs.writeFile(__dirname + "/JSON/state.json", JSON.stringify(stateData) ,  function(err) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log("Data written successfully!");
-    });
+        async function updateState() {
+            try {
+                const db = client.db(dbName);
+                const col1 = db.collection("state");
 
+                await col1.updateOne(
+                  { username : receivedStat.username },
+                  { $set : {
+                      username : receivedStat.username,
+                      fuel : receivedStat.fuel,
+                      minerals : receivedStat.minerals,
+                      planet : receivedStat.planet,
+                      flag : receivedStat.flag
+                    }
+                  },
+                  { new : true, upsert : true }
+                );
+            } catch (err) {
+                console.log(err.stack);
+            } finally {
+            }
+        }
+        updateState().catch(console.dir);
         res.setHeader("Content-Type", "text/json");
         res.end( JSON.stringify( stateData ) );
-        console.log('sent SAVE: '+ JSON.stringify( stateData ) );
-
-    })
-});
+        //console.log('sent SAVE: '+ JSON.stringify( stateData ) ); // debug
+    })}); //mongoDB done
 app.post("/planet", function (req, res){
     let planet='';
     req.on ('data', function(data){
@@ -209,40 +224,51 @@ app.post("/planet", function (req, res){
             let Rplanet=JSON.parse (planet);
 
         });
-         res.setHeader("Content-Type", "text/json");
+        res.setHeader("Content-Type", "text/json");
         res.end (JSON.stringify (planetData));
-        console.log ('sent: '+ JSON.stringify (planetData));
+        //console.log ('sent: '+ JSON.stringify (planetData)); // debug
     })
-})
-app.post ("/grab", function (req, res){
-    let grab='';
-    req.on ('data', function (data){
-        grab+=data;
-        req.on ('end', function (){
+}) //no need for further mongoDB
+app.post ("/grab", function(req, res){
+    let grab = '';
+    req.on ('data', function(data){
+        grab += data;
+        req.on ('end', function(){
             let Rgrab=JSON.parse (grab);
             var i;
             for (i=0; i<planetData.length; i++){
                 if (Rgrab.planetName==planetData[i].planetName){
                     planetData[i].flag='NO';
+                    Rgrab.flag='NO';
                 }
             };
-            fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log("Data written successfully!");
-        });
 
-         res.setHeader("Content-Type", "text/json");
-        res.end (JSON.stringify (planetData));
-        console.log ('sent: '+ JSON.stringify (planetData));
+            async function updatePlanet() {
+                try {
+                    const db = client.db(dbName);
+                    const col2 = db.collection("planets");
+
+                    await col2.findOneAndUpdate(
+                      { planetName : Rgrab.planetName },
+                      { $set : { flag : Rgrab.flag } },
+                      { new : true },
+                    );
+                } catch (err) {
+                    console.log(err.stack);
+                } finally {
+                }
+            }
+            updatePlanet().catch(console.dir);
+            res.setHeader("Content-Type", "text/json");
+            res.end (JSON.stringify (planetData));
+            //console.log ('sent: '+ JSON.stringify (planetData)); // debug
     })
 });
 
-});
-app.post("/place", function (req,res){
+}); //TBD
+app.post("/place", function(req,res){
     let place='';
-    req.on ('data', function (data){
+    req.on ('data', function(data){
         place+=data;
 
         req.on ('end', function (){
@@ -251,29 +277,39 @@ app.post("/place", function (req,res){
             for (i=0; i<planetData.length; i++){
                 if (Rplace.planetName==planetData[i].planetName){
                     planetData[i].flag='YES';
+                    Rplace.flag='YES';
                 }
             };
-            fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log("Data written successfully!");
+
+            async function updatePlanet() {
+                try {
+                    const db = client.db(dbName);
+                    const col2 = db.collection("planets");
+
+                    await col2.findOneAndUpdate(
+                      { planetName : Rplace.planetName },
+                      { $set : { flag : Rplace.flag } },
+                      { new : true },
+                    );
+                } catch (err) {
+                    console.log(err.stack);
+                } finally {
+                }
+            }
+            updatePlanet().catch(console.dir);
+            res.setHeader("Content-Type", "text/json");
+            res.end (JSON.stringify (planetData));
+            //console.log ('sent: '+ JSON.stringify (planetData)); // debug
+          });
         });
-
-         res.setHeader("Content-Type", "text/json");
-        res.end (JSON.stringify (planetData));
-        console.log ('sent: '+ JSON.stringify (planetData));
-    });
-});
-
-});
+}); //TBD
 app.post("/cheat", function (request,response){
   let saved = '';
   request.on('data', function(data){
       saved += data;
   });
   request.on('end', function(){
-  let receivedObject = JSON.parse(saved);
+      let receivedObject = JSON.parse(saved);
 
       var i;
       for (i=0; i< planetData.length; i++){
@@ -282,57 +318,66 @@ app.post("/cheat", function (request,response){
               //console.log("planet found");
               planetData[i].planetMinerals+=receivedObject.foundMinerals;
               i=planetData.length;
+              cheatData().catch(console.dir);
           } else{
               //console.log("not on " + planetData[i].planetName);
           }
       };
 
-  fs.writeFile(__dirname + "/JSON/planets.json", JSON.stringify(planetData) ,  function(err) {
-    if (err) {
-      return console.error(err);
-    }
-  });
+      async function cheatData() {
+          try {
+              const db = client.db(dbName);
+              const col2 = db.collection("planets");
 
+              await col2.findOneAndUpdate(
+                { planetName : receivedObject.planetName },
+                { $inc : { planetMinerals : receivedObject.foundMinerals } },
+                { new : true }
+              );
+          } catch (err) {
+              console.log(err.stack);
+          } finally {
+          }
+      }
       response.setHeader("Content-Type", "text/json");
       response.end( JSON.stringify( planetData ) );
-      console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
+      //console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
   });
-});
+}); //mongoDB done
 
 // ===========================================
 // =                  CHAT                   =
 // ===========================================
 
 io.on('connection', function(socket){
-    console.log(`User connected`);
+    console.log(`User connected to chat`);
     socket.join("Earth");
 
     //Send this event to everyone in the room.
-    //*** TRY TO DECOMMENT THIS ***
-    io.to("Earth").emit('connectToRoom', "Earth");
-    socket.emit('connectToRoom', "Earth");
+    io.to("Earth").emit('connectToRoom', `Earth`);
+    socket.emit('connectToRoom', `Earth`);
 
     socket.on('message', function(message){
       console.log("Received message... ");
       let messageObj = JSON.parse(message);
       if (messageObj.message=='exit_Earth'){
-         console.log('changing room ... ');
+         console.log('Changing chatroom ... ');
          socket.leave("Earth");
          socket.join("Venus");
          socket.emit('connectToRoom', "Venus");
       } else if (messageObj.message=='exit_Venus'){
-         console.log('changing room ... ');
+         console.log('Changing chatroom ... ');
          socket.leave("Venus");
          socket.join("Earth");
          socket.emit('connectToRoom', "Earth");
       } else {
          io.to(messageObj.planet).send(JSON.stringify(messageObj));
-         console.log(`   ... shared to the room: ${messageObj.user}: ${messageObj.message}`);
+         console.log(`  ... and shared to the room -> ${messageObj.user}: ${messageObj.message}`);
       }
     });
 
    socket.on('disconnect', function() {
-        console.log(`User disconnected`);
+        console.log(`User disconnected from chat`);
     });
 
 });

@@ -1,3 +1,5 @@
+// Can be deleted later
+
 const { MongoClient } = require('mongodb');
 
 // Connection URL
