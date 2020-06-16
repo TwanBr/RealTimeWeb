@@ -18,8 +18,6 @@ const uri = 'mongodb+srv://spaceDBuser:Pjufp3M8SBiGYZXP@cluster1-wjvck.azure.mon
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const dbName = "spaceDB";
 
-// *** load data from local file  ***
-const fs = require('fs');
 let myData = null;
 let planetData = null;
 let stateData = null;
@@ -27,15 +25,16 @@ let stateData = null;
 //load data from mongoATLAS
 async function load() {
     try {
+        //Connect to database
         await client.connect();
         console.log ("Connected to mongoDB server");
         const db = client.db(dbName);
-        // get the documets from state, planets, highsocre data
-        const col1 = db.collection("state"); 
-        const col2 = db.collection("planets"); 
+        //Get the documets from state, planets, highsocre data
+        const col1 = db.collection("state");
+        const col2 = db.collection("planets");
         const col3 = db.collection("highscores");
-        
-        //Turn the documents into arrays
+
+        //Turn the documents into array variables
         stateData = await col1.find({}).toArray();
         planetData = await col2.find({}).toArray();
         myData = await col3.find({}).toArray();
@@ -73,7 +72,7 @@ app.post("/start", function (req, res){
         res.end (JSON.stringify (stateData));
         console.log ('Sent from server: ' + JSON.stringify(stateData)); // debug
     })
-}); //mongoDB done
+});
 
 app.post("/update", function(request,response) {
   let saved = '';
@@ -91,8 +90,8 @@ app.post("/update", function(request,response) {
 
           await col2.findOneAndUpdate(
             { planetName : receivedObject.planetName }, //find the data linked to the correct planetName
-            { $inc : { planetMinerals : -receivedObject.foundMinerals } }, //increment planetMinerals
-            { new : true },// ????
+            { $inc : { planetMinerals : -receivedObject.foundMinerals } }, //subtract minerals found from planet's resources
+            { new : true }, //Use updated document instead of original - probably irrelevant in our code
           );
       } catch (err) {
           console.log(err.stack);
@@ -102,7 +101,7 @@ app.post("/update", function(request,response) {
   for (var i = 0; i < planetData.length; i++){
       //Find correct planet
       if (receivedObject.planetName==planetData[i].planetName){
-          //If planet is found
+          //If planet is found, updates the planetData variable, rather than re-asking the db (inefficient when large amount of planets)
           if (planetData[i].planetMinerals >= receivedObject.foundMinerals) {
               planetData[i].planetMinerals -= receivedObject.foundMinerals;
               console.log("Sufficient minerals <3");
@@ -112,14 +111,14 @@ app.post("/update", function(request,response) {
               console.log("Insufficient minerals ;(");
               console.log(`Too few minerals left on` + planetData[i].planetName + `: ` + planetData[i].planetMinerals);
           }
-          i=planetData.length;
+          i=planetData.length; //Skips rest of loop after the correct planet
       } else {} //Continue loop if wrong planet
   };
   response.setHeader("Content-Type", "text/json");
   response.end( JSON.stringify( planetData ) );
   //console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
   });
-}); //mongoDB done for SEARCH, MOVE and RETURN HOME have to be checked// REMOVE THIS ONE ?
+});
 
 app.post("/quit", function(request,response) {
   let store = '';
@@ -151,24 +150,23 @@ app.post("/quit", function(request,response) {
         try {
             const db = client.db(dbName);
             const col3 = db.collection("highscores");
-            
+
             await col3.updateOne(
-              { username : receivedObj.username }, //finds the right username
-              { $set : {username : receivedObj.username, bestScore : receivedObj.bestScore }}, //updates
-              { new : true, upsert : true } //upsert is a new document based on the filter criteria and update modifications
+              { username : receivedObj.username }, //search db for username
+              { $set : {username : receivedObj.username, bestScore : receivedObj.bestScore }}, //updates highscore
+              { new : true, upsert : true } //Upsert means a new entry will be made into the db when none matching the search criteria was found
             );
         } catch (err) {
             console.log(err.stack);
         } finally {
-            await client.close(); // after the client is disconnected
+            await client.close(); //Closes connection after the client chooses to quit
         }
     }
     updateHighScore().catch(console.dir);
     response.setHeader("Content-Type", "text/json");
     response.end( JSON.stringify( myData ) );
     //console.log('sent QUIT: '+ JSON.stringify( myData ) );	// debug
-    });}); 
-//mongoDB done, this one also breaks connection??????????????
+    });});
 
 app.post ("/save", function (req, res){
     let save = '';
@@ -198,10 +196,10 @@ app.post ("/save", function (req, res){
         async function updateState() {
             try {
                 const db = client.db(dbName);
-                const col1 = db.collection("state"); 
+                const col1 = db.collection("state");
                 //updates the data related to the correct username by setting the username, fuel,minerals, plnets, flag situation
                 await col1.updateOne(
-                  { username : receivedStat.username }, 
+                  { username : receivedStat.username },
                   { $set : {
                       username : receivedStat.username,
                       fuel : receivedStat.fuel,
@@ -221,7 +219,7 @@ app.post ("/save", function (req, res){
         res.setHeader("Content-Type", "text/json");
         res.end( JSON.stringify( stateData ) );
         //console.log('sent SAVE: '+ JSON.stringify( stateData ) ); // debug
-    })}); //mongoDB done
+    })});
 app.post("/planet", function (req, res){
     let planet='';
     req.on ('data', function(data){
@@ -234,7 +232,7 @@ app.post("/planet", function (req, res){
         res.end (JSON.stringify (planetData));
         //console.log ('sent: '+ JSON.stringify (planetData)); // debug
     })
-}) //no need for further mongoDB
+});
 app.post ("/grab", function(req, res){
     let grab = '';
     req.on ('data', function(data){
@@ -253,10 +251,10 @@ app.post ("/grab", function(req, res){
                 try {
                     const db = client.db(dbName);
                     const col2 = db.collection("planets");
-                    //updates the flag situation on the planet 
+                    //updates the flag situation on the planet
                     await col2.findOneAndUpdate(
                       { planetName : Rgrab.planetName },//finds the correct planet in question
-                      { $set : { flag : Rgrab.flag } },// updates the flag, when a player grabs it 
+                      { $set : { flag : Rgrab.flag } },// updates the flag on the planet, when a player grabs it
                       { new : true },
                     );
                 } catch (err) {
@@ -271,7 +269,7 @@ app.post ("/grab", function(req, res){
     })
 });
 
-}); //TBD
+});
 app.post("/place", function(req,res){
     let place='';
     req.on ('data', function(data){
@@ -293,7 +291,7 @@ app.post("/place", function(req,res){
                     const col2 = db.collection("planets");
 
                     await col2.findOneAndUpdate(
-                      { planetName : Rplace.planetName },//finds the correct planet 
+                      { planetName : Rplace.planetName },//finds the correct planet
                       { $set : { flag : Rplace.flag } },//updates the flag when a player places it on the planet in question
                       { new : true },
                     );
@@ -308,7 +306,7 @@ app.post("/place", function(req,res){
             //console.log ('sent: '+ JSON.stringify (planetData)); // debug
           });
         });
-}); //TBD
+});
 app.post("/cheat", function (request,response){
   let saved = '';
   request.on('data', function(data){
@@ -319,7 +317,7 @@ app.post("/cheat", function (request,response){
 
       var i;
       for (i=0; i< planetData.length; i++){
-          //console.log(i);
+          //console.log(i); //debug
           if (receivedObject.planetName==planetData[i].planetName){
               //console.log("planet found");
               planetData[i].planetMinerals+=receivedObject.foundMinerals;
@@ -336,7 +334,7 @@ app.post("/cheat", function (request,response){
               const col2 = db.collection("planets");
 
               await col2.findOneAndUpdate(
-                { planetName : receivedObject.planetName },//finds the correct planet 
+                { planetName : receivedObject.planetName },//finds the correct planet
                 { $inc : { planetMinerals : receivedObject.foundMinerals } },//updates the planetMinerals on the found planet
                 { new : true }
               );
@@ -349,7 +347,7 @@ app.post("/cheat", function (request,response){
       response.end( JSON.stringify( planetData ) );
       //console.log('sent UPDATE: '+ JSON.stringify( planetData ) );	// debug
   });
-}); //mongoDB done
+});
 
 // ===========================================
 // =                  CHAT                   =

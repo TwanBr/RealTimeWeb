@@ -6,10 +6,9 @@ To start:
 1) npm install
 2) node app.js
 
-Known issues:
+Known "issues":
 - If searching for minerals on a planet with a placed flag, the first search action will not yield double the amount.
 - Users always join the Earth chat initially, even if they last saved from another planet (which is fine though, as Earth can be considered the central spawn hub)
 
 To do:
-- Fix bottom bar (move it bit to the left)
-- Cleanup code (there are some doubles in there, no large issue since the game is small)
+- Clean up code (there are some needless doubles in there, no large issue since the game is small)
